@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <!-- Заголовок Студии -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3 border-bottom pb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">📊 Творческая студия Luma</h2>
+            <p class="text-muted mb-0">Добро пожаловать в панель управления автора, {{ current_user.name }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/videos/upload" class="btn btn-luma text-white fw-bold rounded-pill px-4 shadow-sm">Загрузить видео</a>
+            <a href="/clips/upload" class="btn btn-outline-primary fw-bold rounded-pill px-4 shadow-sm">Создать клип</a>
+        </div>
+    </div>
+
+    <!-- Блок аналитики (Карточки) -->
+    <div class="row g-4 mb-5">
+        <div class="col-12 col-sm-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <span class="text-muted small text-uppercase fw-bold tracking-wider">Всего просмотров</span>
+                <h3 class="fw-bold text-dark mt-2 mb-0">👁️ {{ total_views }}</h3>
+            </div>
+        </div>
+        <div class="col-12 col-sm-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <span class="text-muted small text-uppercase fw-bold tracking-wider">Публикаций Video</span>
+                <h3 class="fw-bold text-dark mt-2 mb-0">📺 {{ total_videos }}</h3>
+            </div>
+        </div>
+        <div class="col-12 col-sm-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <span class="text-muted small text-uppercase fw-bold tracking-wider">Публикаций Clips</span>
+                <h3 class="fw-bold text-dark mt-2 mb-0">🎬 {{ total_clips }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основной менеджер контента -->
+    <div class="row g-4">
+        <!-- Левая часть: Таблицы управления -->
+        <div class="col-12 col-xl-9">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                <h5 class="fw-bold text-dark mb-4">Ваши видеоролики</h5>
+                {% if not videos %}
+                    <p class="text-muted small py-3 mb-0">Вы еще не загрузили ни одного видеоролика.</p>
+                {% else %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border-light">
+                            <thead class="table-light small text-secondary">
+                                <tr>
+                                    <th>Видео</th>
+                                    <th>Просмотры</th>
+                                    <th>Дата загрузки</th>
+                                    <th class="text-end">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for video in videos %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ video.thumbnail_path }}" class="rounded border me-3" style="width: 70px; height: 40px; object-fit: cover;">
+                                                <span class="fw-semibold text-dark text-truncate" style="max-width: 250px;">{{ video.title }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-secondary small">{{ video.views }}</td>
+                                        <td class="text-secondary small">{{ video.created_date.strftime('%d.%m.%Y') }}</td>
+                                        <td class="text-end">
+                                            <form action="/studio/video/delete/{{ video.id }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите безвозвратно удалить это видео?');" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">Удалить</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h5 class="fw-bold text-dark mb-4">Ваши клипы</h5>
+                {% if not clips %}
+                    <p class="text-muted small py-3 mb-0">Вы еще не опубликовали ни одного клипа.</p>
+                {% else %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border-light">
+                            <thead class="table-light small text-secondary">
+                                <tr>
+                                    <th>Клип</th>
+                                    <th>Лайки</th>
+                                    <th>Дата</th>
+                                    <th class="text-end">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for clip in clips %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ clip.thumbnail_path }}" class="rounded border me-3" style="width: 40px; height: 55px; object-fit: cover;">
+                                                <a href="/clips?clip_id={{ clip.id }}" class="text-decoration-none text-dark fw-semibold text-truncate" style="max-width: 250px;">
+                                                    {{ clip.title }}
+                                                </a>
+                                            </div>
+                                        </td>
+                                        <td class="text-secondary small">❤️ {{ clip.likes_count }}</td>
+                                        <td class="text-secondary small">{{ clip.created_date.strftime('%d.%m.%Y') }}</td>
+                                        <td class="text-end">
+                                            <form action="/studio/clip/delete/{{ clip.id }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите удалить этот клип?');" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">Удалить</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Правая часть: Список управляемых каналов -->
+        <div class="col-12 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 90px; z-index: 1;">
+                <h5 class="fw-bold text-dark mb-3">Ваши каналы</h5>
+                <div class="list-group list-group-flush">
+                    {% for channel in channels %}
+                        <a href="/channel/{{ channel.id }}" class="list-group-item list-group-item-action d-flex align-items-center py-3 border-light px-0 bg-transparent">
+                            <img src="{{ channel.avatar_path }}" class="rounded-circle border me-3" style="width: 36px; height: 36px; object-fit: cover;">
+                            <div class="text-truncate">
+                                <h6 class="fw-bold text-dark mb-0 text-truncate small">{{ channel.channel_name }}</h6>
+                                <span class="text-muted" style="font-size: 0.75rem;">Перейти на канал</span>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

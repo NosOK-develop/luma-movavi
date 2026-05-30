@@ -1,0 +1,167 @@
+{% from "macros.html" import render_luma_name %}
+{% extends "base.html" %}
+{% block content %}
+
+{# Считываем надетую тему из инвентаря пользователя v0.99.2.5 #}
+{% set active_theme = user.get_equipped_theme() %}
+
+<div class="profile-theme-container-fluid min-vh-100 py-5 {% if active_theme %}luma-theme-{{ active_theme }}{% endif %}">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8 card-theme-wrapper p-4 rounded shadow-sm border bg-white text-dark">
+
+                <!-- ВСПЛЫВАЮЩИЕ СИСТЕМНЫЕ ФЛЭШ-УВЕДОМЛЕНИЯ -->
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for msg in messages %}
+                            <div class="alert alert-luma_info py-2 small border-0 mb-3" style="background-color: rgba(255, 0, 127, 0.1); color: #ff007f;">
+                                💡 {{ msg }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- ШАПКА ПРОФИЛЯ С ДИНАМИЧЕСКИМ АВАТАРОМ -->
+                <div class="d-flex flex-column flex-sm-row align-items-center gap-4 border-bottom pb-4 mb-4">
+                    <div class="profile-avatar-zone">
+                        {% if user.avatar_path %}
+                            <img src="{{ user.avatar_path }}" class="rounded-circle border border-2 border-luma_pink shadow"
+                                 style="width: 110px; height: 110px; object-fit: cover;" alt="Avatar">
+                        {% else %}
+                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow border border-2 border-secondary"
+                                 style="width: 110px; height: 110px; background-color: {{ user.get_avatar_meta().color }}; font-size: 2.8rem; user-select: none;">
+                                {{ user.get_avatar_meta().letter }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex-grow-1 text-center text-sm-start">
+                        <h2 class="h3 fw-bold m-0 text-dark">
+                            {{ user.name }}
+                        </h2>
+                        <p class="text-secondary m-0 mb-2">
+                            <span class="d-block small">
+                                @{{ render_luma_name(user, text_class="fw-semibold") }}
+                            </span>
+                            <span class="badge bg-secondary text-light mt-1" style="font-size: 0.7rem;">{{ user.get_role_name() }}</span>
+                        </p>
+                        <p class="small text-muted m-0 mb-2" style="word-break: break-word;">{{ user.about or 'Информация отсутствует.' }}</p>
+
+                        {% if not private_locked or is_owner %}
+                            <a href="{{ url_for('social.friends_hub', nickname=user.nickname) }}" class="text-luma_pink text-decoration-none small fw-bold" style="color: #ff007f;">
+                                👥 Посмотреть друзей и подписчиков
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    <!-- БЛОК СОЦИАЛЬНЫХ КНОПОК, ИНВЕНТАРЯ И КАСТОМИЗАЦИИ -->
+                    <div class="profile-actions-zone text-center text-sm-end mt-2 mt-sm-0">
+                        {% if is_owner %}
+                            <div class="d-flex flex-column gap-2">
+                                <a href="{{ url_for('auth.edit_profile') }}" class="btn btn-outline-secondary px-4 btn-sm fw-bold w-100">Редактировать</a>
+                                <a href="{{ url_for('inventory.user_inventory') }}" class="btn btn-outline-primary px-4 btn-sm fw-bold w-100" style="color: #500DE9; border-color: #500DE9;">🎒 Инвентарь</a>
+                            </div>
+                        {% else %}
+                            <div class="d-flex flex-column gap-2">
+                                {% if is_following %}
+                                    <form action="{{ url_for('social.unfollow_user', nickname=user.nickname) }}" method="post" class="m-0">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm px-4 fw-bold w-100">Отписаться</button>
+                                    </form>
+                                {% else %}
+                                    <form action="{{ url_for('social.follow_user', nickname=user.nickname) }}" method="post" class="m-0">
+                                        <button type="submit" class="btn btn-luma btn-sm px-4 fw-bold text-white w-100" style="background-color: #ff007f;">Подписаться</button>
+                                    </form>
+                                {% endif %}
+
+                                {% if not private_locked %}
+                                    <a href="/messenger?chat_with={{ user.id }}" class="btn btn-outline-secondary btn-sm px-4 fw-bold w-100">💬 Написать</a>
+                                ]{% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- ЭКРАН ПОДТВЕРЖДЕНИЯ НАСТРОЕК ПРИВАТНОСТИ -->
+                {% if private_locked %}
+                    <div class="text-center py-5 rounded bg-light border border-dashed">
+                        <span class="fs-1 d-block mb-2">🔒</span>
+                        <h4 class="fw-bold mb-1">Профиль скрыт настройками приватности</h4>
+                        <p class="small text-muted m-0">Контент и медиа-каналы доступны только одобренным контактам пользователя.</p>
+                    </div>
+                {% else %}
+                    <!-- СПИСОК МЕДИА-КАНАЛОВ И ПОСТОВ ПОЛЬЗОВАТЕЛЯ -->
+                    <div class="channels-section mt-4">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h5 class="m-0 fw-bold text-muted">🎬 Медиа-каналы Luma Media ({{ channels | length }}/5)</h5>
+                            {% if is_owner and channels | length < 5 %}
+                                <a href="/media/create" class="btn btn-luma btn-sm fw-bold text-white py-1" style="background-color: #ff007f;">+ Новый канал</a>
+                            {% endif %}
+                        </div>
+
+                        {% if not channels %}
+                            <div class="text-center py-4 bg-light rounded border border-dashed">
+                                <p class="small text-muted m-0">Каналы Luma Video & Clips еще не привязаны к этому профилю.</p>
+                            </div>
+                        {% else %}
+                            <div class="row row-cols-1 row-cols-sm-2 g-3">
+                                {% for channel in channels %}
+                                    <div class="col">
+                                        <div class="d-flex align-items-center gap-3 p-3 rounded border bg-light">
+                                            <img src="{{ channel.avatar_path or '/static/images/default_channel_avatar.png' }}"
+                                                 class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;" alt="Channel">
+                                            <div class="flex-grow-1 min-w-0">
+                                                <h6 class="fw-bold m-0 text-truncate text-dark">{{ channel.channel_name }}</h6>
+                                                <span class="x-small text-muted">Медиа-канал Luma Media</span>
+                                            </div>
+                                            <div>
+                                                {% if is_owner %}
+                                                    <a href="/media/edit/{{ channel.id }}" class="btn btn-outline-secondary btn-xs py-1 px-2 style-micro">Настроить</a>
+                                                {% else %}
+                                                    <span class="badge bg-success bg-opacity-10 text-success py-1 px-2 style-micro fw-normal">Активен</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}<br>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h5 class="m-0 fw-bold text-muted">📤 Посты Luma</h5>
+                            {% if is_owner %}
+                                <a href="/post/create" class="btn btn-luma btn-sm fw-bold text-white py-1">+ Новый пост</a>
+                            {% endif %}
+                        </div>
+                        <div class="row row-cols-1 row-cols-sm-2 g-3">
+                            {% if posts != [] and posts %}
+                                {% for post in posts %}
+                                    <div class="col">
+                                        <div class="d-flex align-items-center gap-3 p-3 rounded border bg-light">
+                                            <div class="flex-grow-1 min-w-0">
+                                                <h6 class="fw-bold m-0 text-truncate text-dark">{{ post.title }}</h6>
+                                                <span class="x-small text-muted">{{ post.created_at }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="badge bg-success bg-opacity-10 text-success py-1 px-2 style-micro fw-normal">{{ current_user.nickname }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-4 bg-light rounded border border-dashed">
+                                    <p class="small text-muted m-0">Этот пользователь еще не выкладывал посты...</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .style-micro { font-size: 0.7rem; padding: 0.2rem 0.4rem; }
+    .x-small { font-size: 0.75rem; }
+    .border-dashed { border-style: dashed !important; }
+</style>
+{% endblock %}

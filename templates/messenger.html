@@ -1,0 +1,191 @@
+{# templates/messenger.html — Часть 2 (Секция А) v0.99.1fix1 #}
+{% extends "base.html" %}
+{% from "macros.html" import render_luma_name %}
+
+{% block content %}
+<div class="container-fluid px-0 luma-messenger-viewport overflow-hidden" style="height: calc(100vh - 70px); background-color: #f8f9fa;">
+    <div class="row g-0 h-100">
+
+        <!-- ========================================================================== -->
+        <!-- БОКОВАЯ ПАНЕЛЬ ДИАЛОГОВ (Скрывается на мобилках, если выбран чат) -->
+        <!-- ========================================================================== -->
+        <div class="col-12 col-md-4 col-lg-3 sidebar border-end bg-white h-100 d-flex flex-column {% if active_chat %}d-none d-md-flex{% endif %}">
+
+            <!-- Поисковая строка и Ссылки-Инструкции -->
+            <div class="p-2 border-bottom bg-light">
+                <input type="text" class="form-control form-control-sm border-0 bg-white" placeholder="Поиск диалогов и сообществ...">
+                <div class="mt-2 d-flex justify-content-between x-small text-muted px-1">
+                    <span>💬 Доступные переписки</span>
+                    <span class="fw-bold text-primary" style="cursor:help;" title="В списке отображаются только взаимные друзья или чаты по прямым ссылкам.">Фильтр: Друзья</span>
+                </div>
+            </div>
+
+            <!-- Скролл-список чатов -->
+            <div class="flex-grow-1 overflow-y-auto list-group list-group-flush" style="max-height: calc(100vh - 140px);">
+
+                <!-- КАТЕГОРИЯ: ЛИЧНЫЕ ДИАЛОГЫ -->
+                <div class="p-2 bg-light border-bottom style-micro fw-bold text-secondary text-uppercase tracking-wider">Личные диалоги</div>
+                {% if not active_dialogs %}
+                    <div class="p-3 text-center small text-muted">Список друзей пуст. Добавьте друзей через профиль!</div>
+                {% else %}
+                    {% for u in active_dialogs %}
+                        <a href="{{ url_for('messenger.messenger_private', nickname=u.nickname) }}"
+                           class="list-group-item list-group-item-action d-flex align-items-center gap-3 p-2 border-0 {% if chat_type == 'private' and active_chat and active_chat.id == u.id %}active bg-light{% endif %}">
+                            <div class="position-relative flex-shrink-0">
+                                {% if u.avatar_path %}
+                                    <img src="{{ u.avatar_path }}" class="rounded-circle border" style="width: 40px; height: 40px; object-fit: cover;" alt="Avatar">
+                                {% else %}
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                                         style="width: 40px; height: 40px; background-color: {{ u.get_avatar_meta().color }}; font-size: 1.1rem; user-select: none;">
+                                        {{ u.get_avatar_meta().letter }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="min-w-0 flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-baseline mb-0">
+                                    <h6 class="m-0 text-truncate style-name-fix" style="font-size: 0.9rem;">
+                                        {{ render_luma_name(u, text_class="fw-semibold text-dark") }}
+                                    </h6>
+                                </div>
+                                <p class="m-0 x-small text-muted text-truncate">@{{ u.nickname }}</p>
+                            </div>
+                        </a>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- КАТЕГОРИЯ: СООБЩЕСТВА (ГРУППЫ И КАНАЛЫ) -->
+                <div class="p-2 bg-light border-bottom border-top style-micro fw-bold text-secondary text-uppercase tracking-wider">Группы и Каналы Luma</div>
+                {% if not all_communities %}
+                    <div class="p-3 text-center small text-muted">Сообщества не найдены.</div>
+                {% else %}
+                    {% for c in all_communities %}
+                        <!-- Ссылки генерируются динамически по ID сообщества Luma Media -->
+                        <a href="{{ url_for('messenger.messenger_group', group_id=c.id) }}"
+                           class="list-group-item list-group-item-action d-flex align-items-center gap-3 p-2 border-0 {% if (chat_type == 'group' or chat_type == 'channel') and active_chat and active_chat.id == c.id %}active bg-light{% endif %}">
+                            <img src="{{ c.avatar_path or '/static/images/default_channel_avatar.png' }}" class="rounded-circle border" style="width: 40px; height: 40px; object-fit: cover;" alt="Channel">
+                            <div class="min-w-0 flex-grow-1">
+                                <h6 class="m-0 text-dark text-truncate fw-semibold" style="font-size: 0.9rem;">{{ c.channel_name }}</h6>
+                                <span class="x-small text-muted text-truncate d-block">Групповой чат сообщества</span>
+                            </div>
+                        </a>
+                    {% endfor %}
+                {% endif %}
+
+            </div>
+        </div>
+{# templates/messenger.html — Часть 2 (Секция Б) v0.99.1fix1 #}
+        <!-- ========================================================================== -->
+        <!-- ОКНО ТЕКУЩЕЙ ПЕРЕПИСКИ (На мобилках разворачивается, если чат выбран) -->
+        <!-- ========================================================================== -->
+        <div class="col-12 col-md-8 col-lg-9 chat-area h-100 d-flex flex-column {% if not active_chat %}d-none d-md-flex{% endif %}" style="background-color: #f8f9fa;">
+
+            {% if not active_chat %}
+                <!-- Состояние заглушки, если чат не выбран -->
+                <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-muted p-4">
+                    <span class="fs-1 mb-2">💬</span>
+                    <h5 class="fw-bold m-0 text-dark">Мессенджер Luma</h5>
+                    <p class="small text-muted text-center m-0 mt-1" style="max-width: 320px;">Выберите существующий диалог в панели слева или перейдите по прямой ссылке, чтобы начать общение.</p>
+                </div>
+            {% else %}
+
+                <!-- ВЕРХНЯЯ ПАНЕЛЬ АКТИВНОГО ЧАТА (С адаптивной мобильной кнопкой) -->
+                <div class="p-2 border-bottom bg-white d-flex align-items-center justify-content-between flex-shrink-0 shadow-sm">
+                    <div class="d-flex align-items-center gap-2 min-w-0">
+                        <!-- МОБИЛЬНАЯ КНОПКА ВОЗВРАТА (Появляется только на смартфонах) -->
+                        <a href="{{ url_for('messenger.messenger_index') }}" class="btn btn-sm btn-outline-secondary d-md-none me-1 px-2 py-1 small fw-bold">
+                            ← Назад
+                        </a>
+
+                        <!-- Аватарка собеседника / сообщества -->
+                        <div class="flex-shrink-0">
+                            {% if chat_type == 'private' %}
+                                <a href="/profile/{{ active_chat.nickname }}">
+                                    {% if active_chat.avatar_path %}
+                                        <img src="{{ active_chat.avatar_path }}" class="rounded-circle border" style="width: 38px; height: 38px; object-fit: cover;" alt="Avatar">
+                                    {% else %}
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                                             style="width: 38px; height: 38px; background-color: {{ active_chat.get_avatar_meta().color }}; font-size: 1rem; user-select: none;">
+                                            {{ active_chat.get_avatar_meta().letter }}
+                                        </div>
+                                    {% endif %}
+                                </a>
+                            {% else %}
+                                <img src="{{ active_chat.avatar_path or '/static/images/default_channel_avatar.png' }}" class="rounded-circle border" style="width: 38px; height: 38px; object-fit: cover;" alt="Channel">
+                            {% endif %}
+                        </div>
+
+                        <!-- Описание и Стилизованный никнейм -->
+                        <div class="min-w-0">
+                            <h6 class="m-0 text-truncate text-dark fw-bold" style="font-size: 0.95rem;">
+                                {% if chat_type == 'private' %}
+                                    {{ render_luma_name(active_chat, text_class="fw-bold text-dark") }}
+                                {% else %}
+                                    {{ active_chat.channel_name }}
+                                {% endif %}
+                            </h6>
+                            <span class="d-block x-small text-muted text-truncate">
+                                {% if chat_type == 'private' %}
+                                    Личный диалог • @{{ active_chat.nickname }}
+                                {% elif chat_type == 'group' %}
+                                    Групповой чат сообщества
+                                {% else %}
+                                    Вещательный канал трансляций
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- WebRTC Кнопка звонка -->
+                    <div class="flex-shrink-0">
+                        {% if chat_type == 'private' %}
+                            <button id="callBtn" class="btn btn-sm btn-outline-luma_blue px-3 fw-bold" style="color: #500DE9; border-color: #500DE9;">📞 Звонок</button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- КОНТЕЙНЕР ДИНАМИЧЕСКОГО ВЫВОДА СООБЩЕНИЙ СОКЕТА -->
+                <div id="chatMessages" class="chat-messages flex-grow-1 p-3 overflow-y-auto bg-white"
+                     style="max-height: calc(100vh - 180px);"
+                     data-target-id="{{ active_chat.id }}"
+                     data-chat-type="{{ chat_type }}"
+                     data-current-user-id="{{ current_user.id }}"
+                     data-current-user-name="{{ current_user.nickname }}">
+                     <!-- Сюда WebSocket и IndexedDB будут выводить карточки -->
+                </div>
+
+                <!-- ТЕГ ИНТЕРФЕЙСА ЗВОНКОВ WEBRTC -->
+                <div id="webrtcContainer" class="d-none bg-dark p-2 border-top text-center text-white flex-shrink-0 small">
+                    <span class="animate-pulse me-2">🔴</span> Идет сессия медиасоединения...
+                    <button id="hangupBtn" class="btn btn-xs btn-danger ms-3 py-0 px-2 style-micro fw-bold">Положить трубку</button>
+                </div>
+
+                <!-- ФОРМА ОТПРАВКИ И ИНПУТ ВЛОЖЕНИЙ -->
+                <div class="p-2 border-top bg-light flex-shrink-0 shadow-inner">
+                    <form id="messageForm" class="d-flex gap-2 align-items-center m-0">
+                        <!-- Кнопка скрепки медиафайлов -->
+                        <label for="fileInput" class="btn btn-sm btn-outline-secondary m-0 px-2 py-1" style="cursor: pointer;" title="Прикрепить изображение или документ">
+                            📎
+                        </label>
+                        <input type="file" id="fileInput" class="d-none" accept="image/*,application/pdf,application/zip">
+
+                        <!-- Поле текстового ввода -->
+                        <input type="text" id="messageInput" class="form-control form-control-sm border-0 bg-white" placeholder="Напишите сообщение..." autocomplete="off">
+
+                        <!-- Кнопка отправки сообщения -->
+                        <button type="submit" class="btn btn-sm btn-primary px-3 fw-bold">➔</button>
+                    </form>
+                </div>
+
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .style-micro { font-size: 0.7rem; padding: 0.2rem 0.4rem; }
+    .x-small { font-size: 0.75rem; }
+    .style-name-fix .d-inline-flex { max-width: 100%; }
+    .luma-messenger-viewport .sidebar .active { border-left: 3px solid #ff007f !important; }
+</style>
+{% endblock %}

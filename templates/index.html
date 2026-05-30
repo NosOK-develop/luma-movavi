@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5 text-center">
+    {% if not current_user.is_authenticated %}
+        <div class="py-5">
+            <h1 class="display-4 fw-bold text-dark mb-3">Добро пожаловать в Luma</h1>
+            <p class="lead text-muted mb-4">Современная медиаплатформа: безопасный P2P-мессенджер, побайтовый видеостриминг и умные клипы.</p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                <a href="/register" class="btn btn-luma btn-lg px-4 me-sm-3 fw-bold text-white">Начать работу</a>
+                <a href="/login" class="btn btn-outline-secondary btn-lg px-4">Войти в аккаунт</a>
+            </div>
+        </div>
+    {% else %}
+        {% if not posts %}
+            <div class="py-5">
+                <h1 class="display-5 fw-bold text-dark mb-3">Рады видеть вас снова, {{ current_user.name }}!</h1>
+                <p class="lead text-muted mb-4">Ваш единый профиль Luma активен. Перейдите в мессенджер или посмотрите новые видеоролики.</p>
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                    <a href="/messenger" class="btn btn-luma btn-lg px-4 me-sm-3 fw-bold text-white">Открыть мессенджер</a>
+                    <a href="/media" class="btn btn-luma_blue btn-lg px-4 text-white">Смотреть Luma Video</a>
+                </div>
+            </div>
+        {% else %}
+            <div class="py-5">
+                <h1 class="display-5 fw-bold text-dark mb-3">Luma Posts</h1>
+                {% for post in posts %}
+
+                        <div class="row">
+                            <a href="/post/{{ post.id }}" class="col-8 btn btn-outline-luma bg-body-secondary container-md">
+                                <div>
+                                    <h2 class="text-luma">{{ post.title }}</h2>
+                                    <p class="text-luma_blue">Посмотрите пост!</p>
+                                </div>
+                            </a>
+                            <a class="col-4 btn text-luma_gray btn-outline-luma bg-body-secondary" href="/profile/{{ post.author.nickname }}">
+                                <div>
+                                    <h2>@{{ post.author.nickname }}</h2>
+                                    <p>{{ post.created_at }}</p>
+                                </div>
+                            </a>
+
+                        </div>
+
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

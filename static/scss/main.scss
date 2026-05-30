@@ -1,0 +1,777 @@
+// 1. Импортируем только базовые функции фреймворка
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+
+// 2. Глобальные настройки бренда Luma
+$luma-main: #6f2da8;
+$luma-blue: #500DE9;
+$luma-pink: #B00FB5;
+$luma-gray: #6c757d;
+
+// 3. Расширяем стандартные карты до импорта основного ядра
+$custom-colors: (
+  "luma": $luma-main,
+  "luma_blue": $luma-blue,
+  "luma_pink": $luma-pink,
+  "luma_gray": $luma-gray
+);
+$theme-colors: map-merge($theme-colors, $custom-colors);
+
+// 4. Импортируем оставшееся ядро и компоненты локального Bootstrap
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
+@import "bootstrap/scss/bootstrap";
+
+// 5. ГАРАНТИЯ ИНТЕРАКТИВНОСТИ И ПЛАВНОЕ ВЫПАДЕНИЕ МЕНЮ (v0.98.13)
+.dropdown-menu {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: block !important;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.bg-luma_blue {
+    background-color: $luma-blue !important;
+}
+
+// 6. Кастомные компоненты интерфейса Luma
+
+.navbar-luma {
+    background-color: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.sidebar {
+    border-right: 1px solid #dee2e6;
+    height: calc(100vh - 56px);
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+}
+
+.chat-area {
+    height: calc(100vh - 56px);
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+}
+
+.list-group-item-action {
+    color: #495057;
+    border: none;
+    background-color: transparent;
+    &:hover, &.active {
+        background-color: #e9ecef;
+        color: #000;
+    }
+}
+
+.msg-card {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    margin-bottom: 10px;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.msg-me {
+    background-color: $luma-main;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+}
+
+.msg-other {
+    background-color: #e9ecef;
+    color: #212529;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+}
+
+.video-card {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(82, 14, 235, 0.15);
+    }
+
+    .thumbnail-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%;
+        background-color: #e9ecef;
+
+        img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+}
+
+.video-player-wrapper {
+    position: relative;
+    padding-top: 56.25%;
+    background-color: #000;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+
+    video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+// Ограничение размеров логотипа
+.navbar-logo {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+    max-width: 120px;
+    transition: transform 0.2s ease-in-out;
+    &:hover { transform: scale(1.05); }
+}
+
+// Адаптивные мобильные стили
+@media (max-width: 767.98px) {
+    body {
+        padding-bottom: 65px !important;
+    }
+
+    .mobile-top-bar {
+        z-index: 1030;
+        backdrop-filter: blur(10px);
+    }
+
+    .fixed-bottom {
+        z-index: 1030;
+        background-color: rgba(255, 255, 255, 0.96) !important;
+        backdrop-filter: blur(15px);
+    }
+
+    .sidebar, .chat-area {
+        height: calc(100vh - 110px) !important;
+    }
+}
+
+// --- LUMA CUSTOM PLAYER v0.98.3.6 ---
+.luma-player-container {
+    position: relative;
+    width: 100%;
+    background-color: #000;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+    video {
+        width: 100%;
+        display: block;
+    }
+
+    // Вотермарка канала из версии 0.98.3.2
+    .player-watermark {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 6px;
+        opacity: 0.6;
+        pointer-events: none;
+        transition: opacity 0.2s;
+        z-index: 10;
+    }
+
+    &:hover .player-watermark {
+        opacity: 0.9;
+    }
+
+    // Панель управления (появляется при наведении)
+    .player-controls {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
+        padding: 10px 15px;
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        z-index: 11;
+    }
+
+    &:hover .player-controls {
+        opacity: 1;
+    }
+
+    // Прогресс-бар (таймлайн)
+    .timeline-container {
+        height: 5px;
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.3);
+        cursor: pointer;
+        margin-bottom: 10px;
+        position: relative;
+        border-radius: 2px;
+        transition: height 0.1s;
+
+        &:hover {
+            height: 8px;
+        }
+
+        .timeline-progress {
+            height: 100%;
+            background-color: #500DE9; // luma_blue
+            width: 0%;
+            border-radius: 2px;
+        }
+    }
+
+    // Кнопки и регуляторы
+    .controls-buttons {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #fff;
+
+        button {
+            background: none;
+            border: none;
+            color: #fff;
+            padding: 0 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: color 0.2s;
+
+            &:hover {
+                color: #B00FB5; // luma_pink
+            }
+        }
+
+        .left-controls, .right-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .time-display {
+            font-size: 0.85rem;
+            font-family: monospace;
+        }
+
+        .volume-slider {
+            width: 60px;
+            accent-color: #500DE9;
+            cursor: pointer;
+        }
+
+        .player-select {
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            padding: 2px 5px;
+            cursor: pointer;
+            outline: none;
+
+            option {
+                background-color: #212529;
+            }
+        }
+    }
+}
+
+// ==========================================================================
+// LUMA PLAYER v0.98.3.7 - ФИКС КНОПОК И ОВЕРЛЕЯ ЗА ТЕМНЕНИЯ
+// ==========================================================================
+
+// Увеличение размера интерактивной области кнопок
+.controls-buttons {
+    button {
+        padding: 5px 10px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+// КРИТИЧЕСКИЙ ФИКС: Увеличиваем размер кнопок и запрещаем картинкам ловить клики
+.player-icon {
+    width: 26px !important;
+    height: 26px !important;
+    object-fit: contain;
+    pointer-events: none !important;
+}
+
+// Контейнер интерактивного слоя затемнения при паузе / конце видео
+.player-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.65) !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    z-index: 15;
+
+    &.active {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+}
+
+// Блок навигации по центру экрана
+.overlay-controls-center {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-top: 20px;
+
+    .btn-overlay-action {
+        background: rgba(255, 255, 255, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        border-radius: 50% !important;
+        width: 54px;
+        height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.1s;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.35) !important;
+            transform: scale(1.05);
+        }
+
+        .overlay-icon {
+            width: 24px !important;
+            height: 24px !important;
+            object-fit: contain;
+            pointer-events: none !important;
+        }
+    }
+}
+
+// Всплывающая YouTube-карточка над оверлеем плеера
+.overlay-channel-box {
+    position: relative;
+    display: inline-block;
+
+    .avatar-fixer-wrapper {
+        width: 60px !important;
+        height: 60px !important;
+        min-width: 60px !important;
+        min-height: 60px !important;
+        max-width: 60px !important;
+        max-height: 60px !important;
+        border-radius: 50% !important;
+        overflow: hidden !important;
+        display: block !important;
+        flex-shrink: 0 !important;
+        border: 2px solid #ffffff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .channel-preview-trigger {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        object-fit: cover !important;
+        display: block !important;
+        cursor: pointer;
+    }
+
+    .channel-hover-tooltip {
+        position: absolute;
+        bottom: 75px;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        width: 290px;
+        background: #ffffff !important;
+        color: #212529 !important;
+        border-radius: 14px;
+        padding: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+        z-index: 30;
+        pointer-events: none;
+    }
+
+    &:hover {
+        .channel-hover-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateX(-50%) translateY(0) !important;
+            pointer-events: auto !important;
+        }
+    }
+}
+
+// ==========================================================================
+// LUMA CLIPS SHORTS-STYLE INTERFACE v0.98.4.1
+// ==========================================================================
+
+.clips-wrapper-stream {
+    height: calc(100vh - 56px);
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    background-color: #111111;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.clip-shorts-container {
+    height: calc(100vh - 56px);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.clip-video-frame-9-16 {
+    position: relative;
+    height: 95%;
+    aspect-ratio: 9 / 16;
+    background-color: #000;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+
+    video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.clip-side-actions {
+    position: absolute;
+    right: 20px;
+    bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    z-index: 20;
+
+    .action-btn-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: background 0.2s, transform 0.1s;
+
+        &:hover, &.active {
+            background-color: #500DE9 !important;
+            transform: scale(1.05);
+        }
+
+        &.active-like {
+            background-color: #B00FB5 !important;
+        }
+    }
+
+    span {
+        color: #ffffff;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-top: -15px;
+    }
+}
+
+.clip-bottom-info-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.9));
+    padding: 40px 20px 25px 20px;
+    color: #ffffff;
+    z-index: 18;
+
+    .channel-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+
+        .channel-avatar-mini {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid #ffffff;
+        }
+    }
+}
+
+@media (max-width: 767.98px) {
+    .clips-wrapper-stream {
+        height: calc(100vh - 115px) !important;
+    }
+
+    .clip-shorts-container {
+        height: calc(100vh - 115px) !important;
+    }
+
+    .clip-video-frame-9-16 {
+        height: 100% !important;
+        width: 100% !important;
+        border-radius: 0px !important;
+    }
+
+    .clip-side-actions {
+        right: 15px !important;
+        bottom: 85px !important;
+    }
+
+    .clip-bottom-info-overlay {
+        padding-bottom: 85px !important;
+    }
+}
+
+.btn-clip-back-floating {
+    position: absolute !important;
+    top: 20px !important;
+    left: 20px !important;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100 !important;
+    transition: background 0.2s, transform 0.1s;
+
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.75) !important;
+        transform: scale(1.05);
+    }
+}
+
+@media (max-width: 767.98px) {
+    .btn-clip-back-floating {
+        top: 20px !important;
+        left: 15px !important;
+    }
+}
+
+// ==========================================================================
+// 10. ИЗОЛИРОВАННЫЙ СЛОЙ v0.99.2.3 ДЛЯ ПОДДЕРЖКИ СОЦИАЛЬНОГО ХАБА ДРУЗЕЙ
+// ==========================================================================
+.hover-card {
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.03) !important;
+        border-color: $luma-pink !important;
+    }
+}
+
+.hover-pink {
+    transition: color 0.2s ease;
+    &:hover {
+        color: $luma-pink !important;
+    }
+}
+
+.border-dashed {
+    border-style: dashed !important;
+}
+
+// ==========================================================================
+// LUMA PROFILE THEMES ENGINE v0.99.2.5fix1 - ЧЕТКИЙ СТИЛЬ И ЧИТАЕМОСТЬ ТЕКСТА
+// ==========================================================================
+
+// 1. ТЕМА ОФОРМЛЕНИЯ: КОСМОС (space) - Повышенный контраст
+.luma-theme-space {
+    background: radial-gradient(circle at center, #100a2b 0%, #05010d 100%) !important;
+    background-attachment: fixed !important;
+    color: #f0eaff !important;
+
+    // Карточка-обертка профиля Luma
+    .card-theme-wrapper {
+        background: rgba(12, 6, 28, 0.92) !important; // Делаем подложку плотнее
+        border: 1px solid #7d44db !important; // Четкая, не размытая фиолетовая граница
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important; // Тень падает только наружу
+        color: #ffffff !important;
+    }
+
+    // ИСПРАВЛЕНО: Полностью убираем text-shadow, возвращаем абсолютную четкость букв
+    .text-dark, .text-secondary, h2, h3, h5, h6, p, span, label {
+        color: #f0eaff !important;
+        text-shadow: none !important; // Блокируем размытие текста
+    }
+
+    .text-muted {
+        color: #bfaaff !important; // Светло-сиреневый для второстепенного текста
+    }
+
+    // Светлые блоки внутренних списков каналов делаем контрастными
+    .bg-light {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(125, 68, 219, 0.4) !important;
+    }
+}
+
+// 2. ТЕМА ОФОРМЛЕНИЯ: КИБЕРПАНК (cyberpunk) - Фикс читаемости
+.luma-theme-cyberpunk {
+    background: #000000 !important;
+    background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.04)) !important;
+    background-size: 100% 4px, 6px 100% !important;
+    background-attachment: fixed !important;
+
+    .card-theme-wrapper {
+        background: #09090b !important;
+        border: 2px solid #ff007f !important;
+        box-shadow: 6px 6px 0px #00f0ff !important;
+        color: #ffffff !important;
+    }
+
+    // ИСПРАВЛЕНО: Текст заливается чистым неоновым цветом без размывающих теней-свечений
+    .text-dark, h2, h3, h5, h6, p, span, label {
+        color: #00f0ff !important;
+        text-shadow: none !important;
+    }
+
+    .text-secondary, .text-muted {
+        color: #ff007f !important; // Второстепенные надписи красим в четкий розовый
+        text-shadow: none !important;
+    }
+
+    .bg-light {
+        background-color: #141417 !important;
+        border-color: #ff007f !important;
+    }
+
+    a {
+        color: #00ff66 !important; // Ссылки делаем ядовито-зелеными для максимальной видимости
+    }
+}
+
+// 3. ТЕМА ОФОРМЛЕНИЯ: НЕОНОВОЕ СВЕЧЕНИЕ (glow) - Фикс читаемости
+.luma-theme-glow {
+    background: #080808 !important;
+    color: #ffffff !important;
+
+    .card-theme-wrapper {
+        background: #121212 !important; // Плотный угольный фон
+        border: 1px solid rgba(255, 0, 127, 0.4) !important;
+        box-shadow: 0 0 25px rgba(255, 0, 127, 0.15) !important; // Ослабляем свечение наружу
+        color: #ffffff !important;
+    }
+
+    // ИСПРАВЛЕНО: Убираем размывающий text-shadow со всех критических узлов
+    .text-dark, .text-secondary, .text-muted, h2, h3, h5, h6, p, span, label {
+        color: #ffffff !important;
+        text-shadow: none !important; // Полная четкость шрифта
+    }
+
+    .text-muted, .text-secondary {
+        color: #a0a0a0 !important; // Мягкий серый для второстепенного текста
+    }
+
+    .bg-light {
+        background-color: #1a1a1a !important;
+        border-color: rgba(255, 0, 127, 0.3) !important;
+    }
+}
+
+// 4. НОВАЯ ТЕМА ОФОРМЛЕНИЯ: ЛЕС (forest) - Природный изумрудный стиль
+.luma-theme-forest {
+    background: linear-gradient(135deg, #0b1a10 0%, #040a06 100%) !important;
+    background-attachment: fixed !important;
+    color: #e2f3e7 !important;
+
+    .card-theme-wrapper {
+        background: rgba(10, 23, 14, 0.95) !important; // Хвойный плотный фон карточки
+        border: 1px solid #2e7d46 !important; // Травяной четкий бордер
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+        color: #ffffff !important;
+    }
+
+    // Абсолютная четкость и высокая контрастность текста
+    .text-dark, .text-secondary, h2, h3, h5, h6, p, span, label {
+        color: #e2f3e7 !important;
+        text-shadow: none !important;
+    }
+
+    .text-muted {
+        color: #a3cfae !important; // Блекло-зеленый для второстепенных плашек
+    }
+
+    .bg-light {
+        background-color: rgba(255, 255, 255, 0.04) !important;
+        border-color: rgba(46, 125, 70, 0.4) !important;
+    }
+
+    a {
+        color: #52be7e !important; // Насыщенные зеленые ссылки
+        &:hover {
+            color: #2e7d46 !important;
+        }
+    }
+}

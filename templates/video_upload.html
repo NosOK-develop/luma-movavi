@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container h-100 d-flex align-items-center justify-content-center py-5">
+    <div class="row w-100 justify-content-center">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+            
+            <!-- Светлая карточка загрузки контента -->
+            <div class="card bg-white text-dark border-light-subtle shadow p-4 rounded-4">
+                <div class="card-body">
+
+                    <!-- Шапка -->
+                    <div class="text-center mb-4">
+                        <i class="bi bi-cloud-arrow-up-fill text-luma display-4"></i>
+                        <h2 class="fw-bold mt-2 text-dark">Загрузка видео</h2>
+                        <p class="text-muted small">Поделитесь своим творчеством от имени канала Luma Media</p>
+                    </div>
+
+                    {% if message %}
+                    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>{{ message }}</div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Форма Flask-WTF -->
+                    <form action="" method="post" enctype="multipart/form-data" id="upload-video-form" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <!-- Выбор канала Luma Media (Пункт 0.98.1) -->
+                        <div class="mb-3">
+                            {{ form.channel_id.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted">
+                                    <i class="bi bi-megaphone"></i>
+                                </span>
+                                {{ form.channel_id }}
+                            </div>
+                            {% for error in form.channel_id.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Название видео -->
+                        <div class="mb-3">
+                            {{ form.title.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted">
+                                    <i class="bi bi-fonts"></i>
+                                </span>
+                                {{ form.title }}
+                            </div>
+                            {% for error in form.title.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Описание видео -->
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label small fw-semibold text-secondary") }}
+                            {{ form.description }}
+                            {% for error in form.description.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Видеофайл -->
+                        <div class="mb-3">
+                            {{ form.video.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted">
+                                    <i class="bi bi-film"></i>
+                                </span>
+                                {{ form.video }}
+                            </div>
+                            <div class="form-text text-muted" style="font-size: 0.72rem;">Поддерживаются форматы MP4, AVI, MOV, MKV.</div>
+                            {% for error in form.video.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Обложка видео -->
+                        <div class="mb-4">
+                            {{ form.thumbnail.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted">
+                                    <i class="bi bi-image"></i>
+                                </span>
+                                {{ form.thumbnail }}
+                            </div>
+                            <div class="form-text text-muted" style="font-size: 0.72rem;">Рекомендуется соотношение сторон 16:9. Картинка сожмется в WebP автоматически.</div>
+                            {% for error in form.thumbnail.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Кнопка публикации со спиннером -->
+                        <div class="mb-2">
+                            <button type="submit" class="btn btn-luma text-white w-100 py-2 fw-bold" id="submit-btn">
+                                <span id="btn-text"><i class="bi bi-check-circle-fill me-1"></i> Опубликовать видео</span>
+                                <span id="btn-spinner" class="d-none">
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Загрузка и оптимизация медиа...
+                                </span>
+                            </button>
+                        </div>
+
+                        <!-- Ссылка отмены -->
+                        <div class="text-center mt-3">
+                            <a href="/videos" class="text-secondary text-decoration-none small hover-underline">
+                                <i class="bi bi-arrow-left"></i> На главную Luma Video
+                            </a>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // Скрипт предотвращения повторных кликов и визуализации долгой загрузки видео
+    document.getElementById('upload-video-form').addEventListener('submit', function() {
+        const btn = document.getElementById('submit-btn');
+        const text = document.getElementById('btn-text');
+        const spinner = document.getElementById('btn-spinner');
+
+        btn.disabled = true;
+        text.classList.add('d-none');
+        spinner.classList.remove('d-none');
+    });
+</script>
+
+<style>
+    .hover-underline:hover {
+        text-decoration: underline !important;
+        color: #000 !important;
+    }
+</style>
+{% endblock %}

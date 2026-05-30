@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                <h4 class="fw-bold text-dark mb-4">Настройка оформления канала Luma Media</h4>
+                
+                {% if message %}
+                    <div class="alert alert-danger rounded-3 small py-2">{{ message }}</div>
+                {% endif %}
+
+                <!-- Интерактивное превью текущего оформления -->
+                <div class="position-relative mb-5 rounded-3 overflow-hidden border" style="height: 180px; background: url('{{ channel.banner_path }}') center/cover no-repeat;">
+                    <div class="position-absolute bottom-0 start-0 p-3 w-100 d-flex align-items-center" style="background: linear-gradient(transparent, rgba(0,0,0,0.6));">
+                        <img src="{{ channel.avatar_path }}" alt="Avatar" class="rounded-circle border border-2 border-white me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                        <div class="text-white">
+                            <h5 class="fw-bold mb-0">{{ channel.channel_name }}</h5>
+                            <span class="small opacity-75">Превью оформления канала</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.channel_name.label(class="form-label fw-semibold text-secondary small") }}
+                        {{ form.channel_name() }}
+                        {% for error in form.channel_name.errors %}<span class="text-danger small">{{ error }}</span>{% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label fw-semibold text-secondary small") }}
+                        {{ form.description() }}
+                        {% for error in form.description.errors %}<span class="text-danger small">{{ error }}</span>{% endfor %}
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-md-6">
+                            {{ form.avatar.label(class="form-label fw-semibold text-secondary small") }}
+                            {{ form.avatar() }}
+                        </div>
+                        <div class="col-12 col-md-6">
+                            {{ form.banner.label(class="form-label fw-semibold text-secondary small") }}
+                            {{ form.banner() }}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        {{ form.player_icon.label(class="form-label fw-semibold text-secondary small") }}
+                        {{ form.player_icon() }}
+                        <div class="form-text small text-muted">Иконка отобразится в углу кастомного видеоплеера Luma.</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                        <a href="/profile/{{ current_user.nickname }}" class="btn btn-outline-secondary px-4 rounded-pill">Отмена</a>
+                        {{ form.submit() }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

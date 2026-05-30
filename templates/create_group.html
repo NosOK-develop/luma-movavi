@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container h-100 d-flex align-items-center justify-content-center py-5">
+    <div class="row w-100 justify-content-center">
+        <div class="col-10 col-sm-8 col-md-6 col-lg-5">
+            
+            <!-- Карточка формы в темных тонах проекта Luma -->
+            <div class="card bg-dark text-white border-secondary shadow-lg p-4">
+                <div class="card-body">
+                    
+                    <!-- Заголовок -->
+                    <div class="text-center mb-4">
+                        <i class="bi bi-chat-left-heart-fill text-luma display-4"></i>
+                        <h2 class="fw-bold mt-2">Новое сообщество</h2>
+                        <p class="text-muted small">Создайте группу для общения или свой собственный канал</p>
+                    </div>
+
+                    <!-- Форма Flask-WTF -->
+                    <form action="" method="post" enctype="multipart/form-data" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <!-- Поле: Название сообщества -->
+                        <div class="mb-3">
+                            {{ form.title.label(class="form-label fw-semibold text-white-50") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-secondary border-0 text-white">
+                                    <i class="bi bi-type"></i>
+                                </span>
+                                {{ form.title }}
+                            </div>
+                            {% for error in form.title.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Поле: Тип сообщества (Выбор) -->
+                        <div class="mb-3">
+                            {{ form.type.label(class="form-label fw-semibold text-white-50") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-secondary border-0 text-white">
+                                    <i class="bi bi-grid-1x2-fill"></i>
+                                </span>
+                                {{ form.type }}
+                            </div>
+                            {% for error in form.type.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Поле: Описание -->
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label fw-semibold text-white-50") }}
+                            {{ form.description }}
+                            {% for error in form.description.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Поле: Загрузка аватара -->
+                        <div class="mb-4">
+                            {{ form.avatar.label(class="form-label fw-semibold text-white-50") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-secondary border-0 text-white">
+                                    <i class="bi bi-image"></i>
+                                </span>
+                                {{ form.avatar }}
+                            </div>
+                            <div class="form-text text-muted" style="font-size: 0.75rem;">Рекомендуется квадратное изображение формата JPG, PNG или WebP.</div>
+                            {% for error in form.avatar.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Кнопка отправки формы (Использует ваш класс .btn-luma) -->
+                        <div class="mb-2">
+                            {{ form.submit }}
+                        </div>
+
+                        <!-- Ссылка отмены -->
+                        <div class="text-center mt-3">
+                            <a href="/messenger" class="text-luma_gray text-decoration-none small hover-underline">
+                                <i class="bi bi-arrow-left"></i> Вернуться в мессенджер
+                            </a>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Легкий интерактив для ссылки отмены */
+    .hover-underline:hover {
+        text-decoration: underline !important;
+        color: #fff !important;
+    }
+</style>
+{% endblock %}

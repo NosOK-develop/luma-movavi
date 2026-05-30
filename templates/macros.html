@@ -1,0 +1,24 @@
+{# Единый макрос рендеринга кастомизированного никнейма Luma v0.99.2.4fix1 #}
+{% macro render_luma_name(user, text_class="fw-bold") %}
+<span class="d-inline-flex align-items-center gap-1">
+
+    <!-- 1. СЛЕВА ОТ НИКА: Системные маркеры ролей -->
+    {% if user.role_level == 1 %}
+        <span class="text-primary style-verified-tick" title="Верифицированный аккаунт" style="color: #0d6efd; user-select: none; font-weight: bold; margin-right: 2px;">✓</span>
+    {% elif user.role_level >= 2 %}
+        <span class="text-info style-admin-shield" title="Администрация Luma" style="user-select: none; margin-right: 2px;">🛡️</span>
+    {% endif %}
+
+    <!-- 2. ПО ЦЕНТРУ: Чистый @nickname с кастомным CSS-перекрасом из инвентаря -->
+    <span class="{{ text_class }}" style="{{ user.get_equipped_name_style() }}">
+        {{ user.nickname }}
+    </span>
+
+    <!-- 3. СПРАВА ОТ НИКА: Экипированные пользовательские баджи -->
+    {% if user.get_equipped_badge() %}
+        <span class="ms-1 luma-custom-badge" title="Значок из инвентаря" style="user-select: none;">
+            {{ user.get_equipped_badge() }}
+        </span>
+    {% endif %}
+</span>
+{% endmacro %}

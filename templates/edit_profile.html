@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6 bg-body-secondary text-dark p-4 rounded shadow">
+            
+            <div class="d-flex align-items-center justify-content-between mb-4 border-bottom border-secondary pb-3">
+                <h2 class="h4 m-0 text-luma_pink fw-bold">⚙️ Настройки профиля</h2>
+                <a href="{{ url_for('auth.user_profile', nickname=current_user.nickname) }}" class="btn btn-outline-light btn-sm">Назад в профиль</a>
+            </div>
+
+            <!-- Блок визуализации текущего аватара (Google-стиль) -->
+            <div class="text-center mb-4">
+                {% if avatar_meta.type == 'image' %}
+                    <img src="{{ avatar_meta.src }}" class="rounded-circle border border-2 border-luma_pink shadow" 
+                         style="width: 100px; height: 100px; object-fit: cover;" alt="Avatar">
+                {% else %}
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold shadow border border-2 border-secondary" 
+                         style="width: 100px; height: 100px; background-color: {{ avatar_meta.color }}; font-size: 2.5rem; user-select: none;">
+                        {{ avatar_meta.letter }}
+                    </div>
+                {% endif %}
+                <p class="small text-secondary mt-2">@{{ current_user.nickname }}</p>
+            </div>
+
+            <!-- Вывод системных предупреждений валидации -->
+            {% if message %}
+                <div class="alert alert-danger py-2 small" role="alert">
+                    ⚠️ {{ message }}
+                </div>
+            {% endif %}
+
+            <form action="" method="post" enctype="multipart/form-data" class="needs-validation">
+                {{ form.hidden_tag() }}
+
+                <!-- Основные метаданные -->
+                <div class="mb-3">
+                    {{ form.name.label(class="form-label small fw-semibold text-secondary mb-1") }}
+                    {{ form.name }}
+                    {% for error in form.name.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.email.label(class="form-label small fw-semibold text-secondary mb-1") }}
+                    {{ form.email }}
+                    {% for error in form.email.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.about.label(class="form-label small fw-semibold text-secondary mb-1") }}
+                    {{ form.about }}
+                    {% for error in form.about.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Контакты и Безопасность -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.phone.label(class="form-label small fw-semibold text-secondary mb-1") }}
+                        {{ form.phone }}
+                        {% for error in form.phone.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.privacy_level.label(class="form-label small fw-semibold text-secondary mb-1") }}
+                        {{ form.privacy_level }}
+                    </div>
+                </div>
+
+                <!-- Социальные сети -->
+                <div class="p-3 bg-secondary bg-opacity-10 rounded border border-secondary mb-3">
+                    <span class="d-block small text-secondary fw-bold mb-2">🔗 Привязка социальных сетей</span>
+                    
+                    <div class="mb-2">
+                        {{ form.social_telegram.label(class="form-label x-small text-muted mb-1") }}
+                        <div class="input-group">
+                            <span class="input-group-text bg-secondary border-0 text-white-50 small">@</span>
+                            {{ form.social_telegram }}
+                        </div>
+                    </div>
+
+                    <div>
+                        {{ form.social_vk.label(class="form-label x-small text-muted mb-1") }}
+                        {{ form.social_vk }}
+                    </div>
+                </div>
+
+                <!-- Медиа-вложение -->
+                <div class="mb-4">
+                    {{ form.avatar.label(class="form-label small fw-semibold text-secondary mb-1") }}
+                    {{ form.avatar }}
+                    {% for error in form.avatar.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                {{ form.submit }}
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .x-small { font-size: 0.75rem; }
+</style>
+{% endblock %}

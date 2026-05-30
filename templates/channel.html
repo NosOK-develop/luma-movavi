@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Шапка / Баннер канала Luma Media -->
+<div class="w-100 position-relative border-bottom" style="height: 240px; background: url('{{ channel.banner_path or '/static/images/default_channel_banner.png' }}') center/cover no-repeat; background-color: #e9ecef;">
+</div>
+
+<div class="container mb-5">
+    <!-- Блок информации о канале (Аватар, Название, Статистика) -->
+    <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end justify-content-between img-thumbnail border-0 bg-transparent px-2" style="margin-top: -50px; position: relative; z-index: 5;">
+        <div class="d-flex flex-column flex-md-row align-items-center text-center text-md-start">
+            <img src="{{ channel.avatar_path or '/static/images/default_channel_avatar.png' }}" alt="Channel Avatar" class="rounded-circle border border-4 border-white shadow-sm mb-3 mb-md-0" style="width: 130px; height: 130px; object-fit: cover;">
+            <div class="ms-md-4 mb-2">
+                <h2 class="fw-bold text-dark mb-1">{{ channel.channel_name }}</h2>
+                <p class="text-muted mb-0 small">Автор: <a href="/profile/{{ owner.nickname }}" class="text-decoration-none text-luma_blue fw-semibold">@{{ owner.nickname }}</a></p>
+            </div>
+        </div>
+        <div class="mb-2 d-flex gap-2 align-items-center">
+            {% if current_user.is_authenticated and channel.luma_user_id == current_user.id %}
+                <a href="/media/edit/{{ channel.id }}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm">Настроить канал</a>
+                <a href="/studio" class="btn btn-luma text-white rounded-pill px-4 fw-bold shadow-sm">Творческая студия</a>
+            {% else %}
+                <span class="text-muted small me-2" id="subs-count-text">👥 Подписчиков: <strong>{{ subs_count }}</strong></span>
+
+                {% if current_user.is_authenticated %}
+                    <button id="btn-subscribe" data-channel-id="{{ channel.id }}" class="btn {% if is_subbed %}btn-secondary{% else %}btn-danger{% endif %} rounded-pill px-4 fw-bold shadow-sm">
+                        {% if is_subbed %}Вы подписаны{% else %}Подписаться{% endif %}
+                    </button>
+                {% else %}
+                    <a href="/login" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm">Подписаться</a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Описание канала -->
+    {% if channel.description %}
+    <div class="card border-0 bg-white shadow-sm rounded-4 p-4 mt-4">
+        <h6 class="fw-bold text-secondary mb-2 small text-uppercase tracking-wider">О канале</h6>
+        <p class="text-dark mb-0 style-text" style="white-space: pre-line;">{{ channel.description }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Навигационные вкладки контента с добавлением РЕПОСТОВ v0.98.4.2 -->
+    <div class="mt-4">
+        <ul class="nav nav-tabs border-bottom-2" id="channelTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold px-4 text-secondary" id="videos-tab" data-bs-toggle="tab" data-bs-target="#videos-pane" type="button" role="tab" aria-controls="videos-pane" aria-selected="true">📺 Видео ({{ videos | length }})</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold px-4 text-secondary" id="clips-tab" data-bs-toggle="tab" data-bs-target="#clips-pane" type="button" role="tab" aria-controls="clips-pane" aria-selected="false">🎬 Клипы ({{ clips | length }})</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold px-4 text-secondary" id="reposts-tab" data-bs-toggle="tab" data-bs-target="#reposts-pane" type="button" role="tab" aria-controls="reposts-pane" aria-selected="false">🔁 Репосты ({{ reposts | length }})</button>
+            </li>
+        </ul>
+
+        <div class="tab-content pt-4" id="channelTabContent">
+            <!-- Вкладка 1: Собственные видеоролики канала -->
+            <div class="tab-pane fade show active" id="videos-pane" role="tabpanel" aria-labelledby="videos-tab">
+                {% if not videos %}
+                    <div class="text-center py-5">
+                        <span class="fs-1 text-muted">📺</span>
+                        <p class="text-muted mt-2 mb-0">На этом канале пока нет загруженных видеороликов.</p>
+                    </div>
+                {% else %}
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                        {% for video in videos %}
+                            <div class="col">
+                                <div class="video-card shadow-sm h-100 d-flex flex-column bg-white">
+                                    <a href="/videos/{{ video.id }}" class="text-decoration-none">
+                                        <div class="thumbnail-wrapper rounded-top-3">
+                                            <img src="{{ video.thumbnail_path }}" alt="{{ video.title }}">
+                                        </div>
+                                    </a>
+                                    <div class="p-3 d-flex flex-column flex-grow-1">
+                                        <a href="/videos/{{ video.id }}" class="text-decoration-none text-dark">
+                                            <h6 class="fw-bold mb-1 text-truncate-2" style="font-size: 0.95rem;">{{ video.title }}</h6>
+                                        </a>
+                                        <span class="text-muted small mt-auto">{{ video.views }} просмотров</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <!-- Вкладка 2: Собственные вертикальные клипы канала -->
+            <div class="tab-pane fade" id="clips-pane" role="tabpanel" aria-labelledby="clips-tab">
+                {% if not clips %}
+                    <div class="text-center py-5">
+                        <span class="fs-1 text-muted">🎬</span>
+                        <p class="text-muted mt-2 mb-0">На этом канале пока нет опубликованных клипов.</p>
+                    </div>
+                {% else %}
+                    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
+                        {% for clip in clips %}
+                            <div class="col">
+                                <div class="card border-0 shadow-sm overflow-hidden h-100 rounded-3 position-relative bg-dark" style="aspect-ratio: 9/16;">
+                                    <img src="{{ clip.thumbnail_path }}" class="card-img w-100 h-100 object-fit-cover opacity-75" alt="{{ clip.title }}">
+                                    <div class="card-img-overlay d-flex flex-column justify-content-end p-2" style="background: linear-gradient(transparent, rgba(0,0,0,0.8));">
+                                        <a href="/clips?clip_id={{ clip.id }}" class="text-decoration-none text-white">
+                                            <p class="small fw-bold mb-1 text-truncate">{{ clip.title }}</p>
+                                        </a>
+                                        <span class="text-white-50" style="font-size: 0.75rem;">❤️ {{ clip.likes_count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+                        <!-- Вкладка 3: ИНТЕГРАЦИЯ ВЫВОДА РЕПОСТОВ С УДАЛЕНИЕМ v0.98.4.3 (Часть 1) -->
+            <div class="tab-pane fade" id="reposts-pane" role="tabpanel" aria-labelledby="reposts-tab">
+                {% if not reposts %}
+                    <div class="text-center py-5">
+                        <span class="fs-1 text-muted">🔁</span>
+                        <p class="text-muted mt-2 mb-0">Этот автор еще не делал репостов на свой канал.</p>
+                    </div>
+                {% else %}
+                    <div class="row g-4">
+                        {% for item in reposts %}
+                            <div class="col-12">
+                                <div class="card border border-light shadow-sm rounded-4 p-3 bg-white position-relative">
+                                    <div class="position-absolute top-0 end-0 p-3 d-flex align-items-center gap-3">
+                                        <span class="text-muted small fw-bold">🔁 {{ item.repost_date.strftime('%d.%m.%Y') }}</span>
+
+                                        <!-- Кнопка удаления репоста для автора канала -->
+                                        {% if current_user.is_authenticated and channel.luma_user_id == current_user.id %}
+                                            <form action="/repost/delete/{{ item.repost_id }}" method="POST" onsubmit="return confirm('Удалить этот репост с вашего канала?');" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0" style="font-size: 0.75rem;">Удалить</button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                                                        <!-- Вывод содержимого репоста в зависимости от типа медиа -->
+                                    <div class="mt-4 pt-2">
+                                        {% if item.type == 'video' %}
+                                            <!-- Карточка репостнутого длинного видео -->
+                                            <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3">
+                                                <div style="width: 140px; aspect-ratio: 16/9; flex-shrink: 0; background-color: #f1f1f1;" class="rounded border overflow-hidden">
+                                                    <img src="{{ item.data.thumbnail_path }}" class="w-100 h-100 object-fit-cover" alt="Video Cover">
+                                                </div>
+                                                <div class="overflow-hidden">
+                                                    <span class="badge bg-luma text-white rounded-pill mb-1" style="font-size: 0.7.rem;">Видеоролик</span>
+                                                    <a href="/videos/{{ item.data.id }}" class="text-decoration-none text-dark d-block">
+                                                        <h6 class="fw-bold mb-1 text-truncate">{{ item.data.title }}</h6>
+                                                    </a>
+                                                    <p class="text-muted small mb-0 text-truncate" style="max-width: 450px;">{{ item.data.description or 'Нет описания.' }}</p>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <!-- Карточка репостнутого короткого Shorts-клипа -->
+                                            <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3">
+                                                <div style="width: 70px; height: 110px; flex-shrink: 0; background-color: #f1f1f1;" class="rounded border overflow-hidden">
+                                                    <img src="{{ item.data.thumbnail_path }}" class="w-100 h-100 object-fit-cover" alt="Clip Cover">
+                                                </div>
+                                                <div>
+                                                    <span class="badge bg-luma_pink text-white rounded-pill mb-1" style="font-size: 0.7rem;">Короткий клип</span>
+                                                    <a href="/clips?clip_id={{ item.data.id }}" class="text-decoration-none text-dark d-block">
+                                                        <h6 class="fw-bold mb-1">{{ item.data.title }}</h6>
+                                                    </a>
+                                                    <span class="text-muted small">❤️ Лайков: {{ item.data.likes_count }}</span>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <!-- КОНЕЦ ВКЛАДКИ РЕПОСТОВ -->
+        </div>
+    </div>
+</div>
+
+<!-- Асинхронный скрипт подписок на странице канала -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const subBtn = document.getElementById('btn-subscribe');
+    if (subBtn) {
+        subBtn.addEventListener('click', function() {
+            const channelId = this.getAttribute('data-channel-id');
+            fetch(`/api/channel/${channelId}/subscribe`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) { alert(data.error); return; }
+                if (data.subscribed) {
+                    subBtn.className = 'btn btn-secondary rounded-pill px-4 fw-bold shadow-sm';
+                    subBtn.innerText = 'Вы подписаны';
+                } else {
+                    subBtn.className = 'btn btn-danger rounded-pill px-4 fw-bold shadow-sm';
+                    subBtn.innerText = 'Подписаться';
+                }
+                document.getElementById('subs-count-text').innerHTML = `👥 Подписчиков: <strong>${data.subs_count}</strong>`;
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

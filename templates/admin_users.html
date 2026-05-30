@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Заголовок панели -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h1 class="fw-bold text-dark mb-1">
+                <i class="bi bi-shield-lock-fill text-luma me-2"></i>Административная панель
+            </h1>
+            <p class="text-muted small mb-0">Управление пользователями и распределение уровней иерархии ролей (v0.98.2)</p>
+        </div>
+        <a href="/profile/{{ current_user.nickname }}" class="btn btn-outline-secondary btn-sm rounded-3">
+            <i class="bi bi-arrow-left"></i> В профиль
+        </a>
+    </div>
+
+    <!-- Таблица пользователей (Адаптивная обертка) -->
+    <div class="card bg-white border-light-subtle shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-dark">
+                <thead class="table-light text-secondary small text-uppercase">
+                    <tr>
+                        <th class="ps-4 py-3" style="width: 80px;">ID</th>
+                        <th class="py-3">Пользователь</th>
+                        <th class="py-3">Email</th>
+                        <th class="py-3">Текущий статус</th>
+                        <th class="py-3 pe-4 text-end" style="min-width: 220px;">Изменить уровень роли</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    {% for u in sorted_users %}
+                    <tr>
+                        <!-- ID -->
+                        <td class="ps-4 fw-bold text-secondary">#{{ u.id }}</td>
+                        
+                        <!-- Информация -->
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar bg-light text-luma rounded-circle text-center fw-bold me-3 border" style="width: 38px; height: 38px; line-height: 36px; font-size: 0.85rem;">
+                                    {{ u.nickname[:2] | upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark mb-0">{{ u.name }}</div>
+                                    <small class="text-luma fw-semibold">@{{ u.nickname }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <!-- Email -->
+                        <td class="text-muted small">{{ u.email }}</td>
+                        
+                        <!-- Бейдж текущей роли -->
+                        <td>
+                            {% if u.role_level == 4 %}
+                                <span class="badge bg-danger rounded-pill px-3 py-2 shadow-sm"><i class="bi bi-star-fill me-1"></i> Главный админ</span>
+                            {% elif u.role_level == 3 %}
+                                <span class="badge bg-warning text-dark border border-warning-subtle rounded-pill px-3 py-2"><i class="bi bi-shield-fill"></i> Админ</span>
+                            {% elif u.role_level == 2 %}
+                                <span class="badge bg-info text-dark border border-info-subtle rounded-pill px-3 py-2"><i class="bi bi-collection-play-fill"></i> Админ Media</span>
+                            {% elif u.role_level == 1 %}
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill px-3 py-2"><i class="bi bi-patch-check-fill"></i> Верифицирован</span>
+                            {% else %}
+                                <span class="badge bg-light text-secondary border rounded-pill px-3 py-2">Пользователь</span>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Селект смены роли (Форма) -->
+                        <td class="pe-4 text-end">
+                            <!-- Запрещаем менять самого себя и Главного администратора, если текущий админ ниже рангом -->
+                            {% if u.id == current_user.id or (u.role_level == 4 and current_user.role_level < 4) %}
+                                <select class="form-select form-select-sm d-inline-block bg-light border-0 text-muted" style="width: 200px;" disabled>
+                                    <option>Действие заблокировано</option>
+                                </select>
+                            {% else %}
+                                <form action="/admin/users/{{ u.id }}/change_role" method="POST" class="d-inline-block">
+                                    <select name="role_level" class="form-select form-select-sm bg-white border-secondary-subtle d-inline-block me-1" style="width: 200px;" onchange="this.form.submit()">
+                                        <option value="0" {% if u.role_level == 0 %}selected{% endif %}>Пользователь</option>
+                                        <option value="1" {% if u.role_level == 1 %}selected{% endif %}>Верифицированный</option>
+                                        <option value="2" {% if u.role_level == 2 %}selected{% endif %}>Админ Media</option>
+                                        <option value="3" {% if u.role_level == 3 %}selected{% endif %}>Администратор</option>
+                                        <!-- Назначать главного админа может только сам главный админ -->
+                                        {% if current_user.role_level == 4 %}
+                                        <option value="4" {% if u.role_level == 4 %}selected{% endif %}>Главный администратор</option>
+                                        {% endif %}
+                                    </select>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

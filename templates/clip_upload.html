@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container h-100 d-flex align-items-center justify-content-center py-5">
+    <div class="row w-100 justify-content-center">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-5">
+            
+            <!-- Светлая карточка загрузки вертикального контента -->
+            <div class="card bg-white text-dark border-light-subtle shadow p-4 rounded-4">
+                <div class="card-body">
+
+                    <!-- Заголовок и иконка -->
+                    <div class="text-center mb-4">
+                        <i class="bi bi-camera-reels-fill text-luma display-4"></i>
+                        <h2 class="fw-bold mt-2 text-dark">Новый клип</h2>
+                        <p class="text-muted small">Опубликуйте короткое вертикальное видео от имени канала Luma Media</p>
+                    </div>
+
+                    {% if message %}
+                    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>{{ message }}</div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Форма Flask-WTF -->
+                    <form action="" method="post" enctype="multipart/form-data" id="upload-clip-form" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <!-- Выбор канала Luma Media (Пункт 0.98.1) -->
+                        <div class="mb-3">
+                            {{ form.channel_id.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted">
+                                    <i class="bi bi-megaphone"></i>
+                                </span>
+                                {{ form.channel_id }}
+                            </div>
+                            {% for error in form.channel_id.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Описание клипа и хэштеги -->
+                        <div class="mb-3">
+                            {{ form.title.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted">
+                                    <i class="bi bi-hash"></i>
+                                </span>
+                                {{ form.title }}
+                            </div>
+                            <div class="form-text text-muted" style="font-size: 0.7rem;">Максимум 100 символов. Пишите емко!</div>
+                            {% for error in form.title.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Вертикальное видео -->
+                        <div class="mb-3">
+                            {{ form.video.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted">
+                                    <i class="bi bi-play-circle-fill"></i>
+                                </span>
+                                {{ form.video }}
+                            </div>
+                            <div class="form-text text-muted" style="font-size: 0.7rem;">Рекомендуемый формат — 9:16 (вертикальный). Поддерживаются MP4, MOV.</div>
+                            {% for error in form.video.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Обложка (Превью-кадр) -->
+                        <div class="mb-4">
+                            {{ form.thumbnail.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted">
+                                    <i class="bi bi-image-fill"></i>
+                                </span>
+                                {{ form.thumbnail }}
+                            </div>
+                            <div class="form-text text-muted" style="font-size: 0.7rem;">Картинка автоматически ужмется в WebP для экономии места на диске.</div>
+                            {% for error in form.thumbnail.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Кнопка со спиннером загрузки -->
+                        <div class="mb-2">
+                            <button type="submit" class="btn btn-luma text-white w-100 py-2 fw-bold" id="publish-btn">
+                                <span id="btn-text-normal"><i class="bi bi-send-check-fill me-1"></i> Опубликовать клип</span>
+                                <span id="btn-text-loading" class="d-none">
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Загрузка и конвертация медиа...
+                                </span>
+                            </button>
+                        </div>
+
+                        <!-- Ссылка назад -->
+                        <div class="text-center mt-3">
+                            <a href="/clips" class="text-secondary text-decoration-none small hover-underline">
+                                <i class="bi bi-arrow-left"></i> Вернуться к ленте клипов
+                            </a>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // Блокировка повторных кликов и визуализация прогресса
+    document.getElementById('upload-clip-form').addEventListener('submit', function() {
+        const btn = document.getElementById('publish-btn');
+        const normalText = document.getElementById('btn-text-normal');
+        const loadingText = document.getElementById('btn-text-loading');
+
+        btn.disabled = true;
+        normalText.classList.add('d-none');
+        loadingText.classList.remove('d-none');
+    });
+</script>
+
+<style>
+    .hover-underline:hover {
+        text-decoration: underline !important;
+        color: #000 !important;
+    }
+</style>
+{% endblock %}

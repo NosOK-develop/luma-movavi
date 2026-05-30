@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container h-100 d-flex align-items-center justify-content-center py-5">
+    <div class="row w-100 justify-content-center">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
+
+            <div class="card bg-white text-dark border-light-subtle shadow p-4 rounded-4">
+                <div class="card-body">
+
+                    <div class="text-center mb-4">
+                        <i class="bi bi-shield-lock-fill text-luma display-4"></i>
+                        <h2 class="fw-bold mt-2 text-dark">Авторизация</h2>
+                        <p class="text-muted small">Вход в систему Luma</p>
+                    </div>
+
+                    <form action="" method="post" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.nickname.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
+                                {{ form.nickname(class="form-control bg-white border-start-0", placeholder="Никнейм") }}
+                            </div>
+                            {% for error in form.nickname.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-key text-muted"></i></span>
+                                {{ form.password(class="form-control bg-white border-start-0", type="password", placeholder="Пароль") }}
+                            </div>
+                            {% for error in form.password.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="form-check mb-4">
+                            {{ form.remember(class="form-check-input") }}
+                            {{ form.remember.label(class="form-check-label small text-secondary") }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.submit(class="btn btn-luma w-100 py-2 fw-bold text-white") }}
+                        </div>
+
+                        {% if message %}
+                        <div class="alert alert-danger p-2 small text-center mt-2" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ message }}
+                        </div>
+                        {% endif %}
+
+                        <div class="text-center mt-4">
+                            <p class="small text-muted mb-0">Ещё нет аккаунта? <a href="/register" class="text-luma text-decoration-none fw-bold">Регистрация</a></p>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

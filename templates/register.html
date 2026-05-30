@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container h-100 d-flex align-items-center justify-content-center py-5">
+    <div class="row w-100 justify-content-center">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+
+            <!-- Светлая карточка регистрации -->
+            <div class="card bg-white text-dark border-light-subtle shadow p-4 rounded-4">
+                <div class="card-body">
+
+                    <div class="text-center mb-4">
+                        <i class="bi bi-person-plus-fill text-luma display-4"></i>
+                        <h2 class="fw-bold mt-2 text-dark">Регистрация</h2>
+                        <p class="text-muted small">Создание единого аккаунта Luma</p>
+                    </div>
+
+                    <form action="" method="post" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <!-- Никнейм -->
+                        <div class="mb-3">
+                            {{ form.nickname.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-at text-muted"></i></span>
+                                {{ form.nickname(class="form-control bg-white border-start-0", placeholder="Придумайте никнейм") }}
+                            </div>
+                            {% for error in form.nickname.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Имя -->
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
+                                {{ form.name(class="form-control bg-white border-start-0", placeholder="Как вас зовут?") }}
+                            </div>
+                            {% for error in form.name.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                                {{ form.email(class="form-control bg-white border-start-0", type="email", placeholder="name@example.com") }}
+                            </div>
+                            {% for error in form.email.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Пароль -->
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-key text-muted"></i></span>
+                                {{ form.password(class="form-control bg-white border-start-0", type="password", placeholder="Минимум 4 символа") }}
+                            </div>
+                            {% for error in form.password.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Повтор пароля -->
+                        <div class="mb-3">
+                            {{ form.password_again.label(class="form-label small fw-semibold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-key-fill text-muted"></i></span>
+                                {{ form.password_again(class="form-control bg-white border-start-0", type="password", placeholder="Повторите пароль") }}
+                            </div>
+                            {% for error in form.password_again.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- О себе -->
+                        <div class="mb-4">
+                            {{ form.about.label(class="form-label small fw-semibold text-secondary") }}
+                            {{ form.about(class="form-control bg-white", rows="3", placeholder="Расскажите немного о себе...") }}
+                            {% for error in form.about.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Кнопка отправки -->
+                        <div class="mb-3">
+                            {{ form.submit(class="btn btn-luma w-100 py-2 fw-bold text-white") }}
+                        </div>
+
+                        {% if message %}
+                        <div class="alert alert-danger p-2 small text-center mt-2" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ message }}
+                        </div>
+                        {% endif %}
+
+                        <div class="text-center mt-4">
+                            <p class="small text-muted mb-0">Уже зарегистрированы? <a href="/login" class="text-luma text-decoration-none fw-bold">Войти в аккаунт</a></p>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

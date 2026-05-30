@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="p-5 mb-4 bg-light rounded-3 shadow-sm">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold text-luma">Введите код из почты</h1>
+            <p class="col-md-8 fs-4">Код отправлен на почту: {{ email }}</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

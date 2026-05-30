@@ -1,0 +1,126 @@
+{% from "macros.html" import render_luma_name %}
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8 bg-dark text-white p-4 rounded shadow">
+            
+            <!-- Заголовок контекста -->
+            <div class="d-flex align-items-center justify-content-between mb-4 border-bottom border-secondary pb-3">
+                <div>
+                    <h2 class="h4 m-0 text-luma_pink fw-bold">👥 Социальный граф</h2>
+                    <p class="small text-secondary m-0">Контакты пользователя @{{ user.nickname }}</p>
+                </div>
+                <a href="{{ url_for('auth.user_profile', nickname=user.nickname) }}" class="btn btn-outline-light btn-sm">Назад в профиль</a>
+            </div>
+
+            <!-- Навигационные табы Bootstrap -->
+            <ul class="nav nav-tabs border-secondary mb-4" id="socialTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active text-white position-relative px-3 py-2 border-0 bg-transparent" id="friends-tab" data-bs-toggle="tab" data-bs-target="#friends-zone" type="button" role="tab">
+                        🤝 Друзья <span class="badge rounded-pill bg-luma_pink ms-1" style="background-color: #ff007f;">{{ friends | length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-white position-relative px-3 py-2 border-0 bg-transparent" id="followers-tab" data-bs-toggle="tab" data-bs-target="#followers-zone" type="button" role="tab">
+                        📥 Подписчики <span class="badge rounded-pill bg-secondary ms-1">{{ followers | length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-white position-relative px-3 py-2 border-0 bg-transparent" id="following-tab" data-bs-toggle="tab" data-bs-target="#following-zone" type="button" role="tab">
+                        📤 Подписки <span class="badge rounded-pill bg-secondary ms-1">{{ following | length }}</span>
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Контентная зона табов -->
+            <div class="tab-content text-light" id="socialTabsContent">
+                
+                <!-- 1. ВКЛАДКА: ДРУЗЬЯ -->
+                <div class="tab-pane fade show active" id="friends-zone" role="tabpanel">
+                    {% if not friends %}
+                        <div class="text-center py-5 bg-secondary bg-opacity-10 rounded border border-secondary border-dashed">
+                            <p class="text-secondary m-0">Список друзей пока пуст.</p>
+                        </div>
+                    {% else %}
+                        <div class="row row-cols-1 row-cols-sm-2 g-3">
+                            {% for u in friends %}
+                                {{ render_social_card(u) }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- 2. ВКЛАДКА: ПОДПИСЧИКИ -->
+                <div class="tab-pane fade" id="followers-zone" role="tabpanel">
+                    {% if not followers %}
+                        <div class="text-center py-5 bg-secondary bg-opacity-10 rounded border border-secondary border-dashed">
+                            <p class="text-secondary m-0">У пользователя пока нет подписчиков.</p>
+                        </div>
+                    {% else %}
+                        <div class="row row-cols-1 row-cols-sm-2 g-3">
+                            {% for u in followers %}
+                                {{ render_social_card(u) }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- 3. ВКЛАДКА: ПОДПИСКИ -->
+                <div class="tab-pane fade" id="following-zone" role="tabpanel">
+                    {% if not following %}
+                        <div class="text-center py-5 bg-secondary bg-opacity-10 rounded border border-secondary border-dashed">
+                            <p class="text-secondary m-0">Пользователь ни на кого не подписан.</p>
+                        </div>
+                    {% else %}
+                        <div class="row row-cols-1 row-cols-sm-2 g-3">
+                            {% for u in following %}
+                                {{ render_social_card(u) }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Микро-макрос Jinja2 для генерации карточки пользователя Luma -->
+{% macro render_social_card(u) %}
+<div class="col">
+    <div class="d-flex align-items-center gap-3 p-3 rounded border border-secondary bg-secondary bg-opacity-10 hover-card transition-all">
+        <div class="avatar-holder">
+            {% if u.avatar_path %}
+                <img src="{{ u.avatar_path }}" class="rounded-circle border border-secondary" style="width: 48px; height: 48px; object-fit: cover;" alt="Avatar">
+            {% else %}
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" 
+                     style="width: 48px; height: 48px; background-color: {{ u.get_avatar_meta().color }}; font-size: 1.25rem; user-select: none;">
+                    {{ u.get_avatar_meta().letter }}
+                </div>
+            {% endif %}
+        </div>
+        <div class="flex-grow-1 min-w-0">
+            <a href="{{ url_for('auth.user_profile', nickname=u.nickname) }}" class="d-block fw-bold text-white text-decoration-none text-truncate hover-pink">
+                {{ render_luma_name(u, text_class="fw-bold hover-pink") }}
+            </a>
+            <span class="d-block text-secondary x-small text-truncate">@{{ u.nickname }}</span>
+        </div>
+        <div>
+            <a href="{{ url_for('auth.user_profile', nickname=u.nickname) }}" class="btn btn-outline-light btn-xs py-1 px-2 style-micro">Смотреть</a>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+<style>
+    .style-micro { font-size: 0.7rem; }
+    .x-small { font-size: 0.75rem; }
+    .nav-tabs .nav-link { border-bottom: 2px solid transparent !important; transition: all 0.2s; }
+    .nav-tabs .nav-link.active { border-bottom: 2px solid #ff007f !important; color: #ff007f !important; font-weight: bold; }
+    .hover-card:hover { background-color: rgba(255, 255, 255, 0.05) !important; border-color: rgba(255, 0, 127, 0.3) !important; }
+    .hover-pink:hover { color: #ff007f !important; }
+    .transition-all { transition: all 0.2s ease-in-out; }
+</style>
+{% endblock %}

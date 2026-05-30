@@ -1,0 +1,502 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Левая колонка: Кастомный плеер Luma, Блок канала и комментарии -->
+        <div class="col-12 col-lg-8">
+
+            <!-- 1. КАСТОМНЫЙ ВИДЕОПЛЕЕР С ИНТЕРАКТИВНЫМ ОВЕРЛЕЕМ v0.98.3.7 -->
+            <div class="luma-player-container mb-4" id="lumaPlayer">
+                <!-- Вотермарка канала из v0.98.3.2 -->
+                {% if channel and channel.player_icon_path %}
+                    <img src="{{ channel.player_icon_path }}" class="player-watermark" alt="Watermark">
+                {% endif %}
+
+                <!-- Побайтовый стриминг видеопотока Luma HTTP 206 -->
+                <video id="mainVideo" src="/videos/stream/{{ video.id }}" preload="metadata"></video>
+
+                <!-- ИНТЕРАКТИВНЫЙ СЛОЙ ЗА ТЕМНЕНИЯ (ПРИ ПАУЗЕ ИЛИ КОНЦЕ ВИДЕО) -->
+                <div class="player-overlay" id="playerOverlay">
+
+                    <!-- Верхняя часть: Иконка канала с всплывающей YouTube-табличкой -->
+                    <div class="overlay-channel-box">
+                        <div class="avatar-fixer-wrapper">
+                            <img src="{{ channel.avatar_path or '/static/images/default_channel_avatar.png' }}" class="channel-preview-trigger" alt="Channel Trigger">
+                        </div>
+                        <!-- Всплывающая табличка при наведении на аватарку внутри оверлея -->
+                        <div class="channel-hover-tooltip border text-start">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <img src="{{ channel.avatar_path or '/static/images/default_channel_avatar.png' }}" class="rounded-circle border" style="width: 44px; height: 44px; object-fit: cover;">
+                                <div class="overflow-hidden">
+                                    <a href="/channel/{{ channel.id }}" class="text-decoration-none text-dark fw-bold small d-block text-truncate">{{ channel.channel_name }}</a>
+                                    <span class="text-muted" style="font-size: 0.75rem;">👥 {{ subs_count }} подписчиков</span>
+                                </div>
+                            </div>
+                            <div class="d-grid">
+                                {% if current_user.is_authenticated and channel.luma_user_id == current_user.id %}
+                                    <a href="/channel/{{ channel.id }}" class="btn btn-sm btn-outline-secondary rounded-pill fw-bold">Ваш канал</a>
+                                {% else %}
+                                    <button id="overlay-subscribe-btn" class="btn btn-sm {% if is_subbed %}btn-secondary{% else %}btn-danger{% endif %} rounded-pill fw-bold">
+                                        {% if is_subbed %}Вы подписаны{% else %}Подписаться{% endif %}
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Центральная часть: 3 навигационные кнопки из папки buttons -->
+                    <div class="overlay-controls-center">
+                        <!-- Кнопка Перехода Назад (Переходит на id - 1) -->
+                        <a href="/videos/{{ video.id - 1 if video.id > 1 else 1 }}" class="btn-overlay-action">
+                            <img src="/static/images/buttons/previous.png" class="overlay-icon" alt="Prev">
+                        </a>
+
+                        <!-- Центральный индикатор: Пауза / Повтор (Динамически подменяется в JS) -->
+                        <button id="overlayCenterBtn" class="btn-overlay-action" type="button">
+                            <img src="/static/images/buttons/pause.png" id="overlayCenterImg" class="overlay-icon" alt="Status">
+                        </button>
+
+                        <!-- Кнопка Перехода Вперед (Переходит на id + 1) -->
+                        <a href="/videos/{{ video.id + 1 }}" class="btn-overlay-action">
+                            <img src="/static/images/buttons/next.png" class="overlay-icon" alt="Next">
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Нижняя панель управления плеером -->
+                <div class="player-controls">
+                    <!-- Ползунок времени (Таймлайн) -->
+                    <div class="timeline-container" id="timelineContainer">
+                        <div class="timeline-progress" id="timelineProgress"></div>
+                    </div>
+
+                    <div class="controls-buttons">
+                        <div class="left-controls">
+                            <button id="playPauseBtn" type="button">
+                                <img src="/static/images/buttons/play.png" id="playPauseImg" class="player-icon" alt="Play">
+                            </button>
+                            <button id="muteBtn" type="button">
+                                <img src="/static/images/buttons/volume3.png" id="volumeImg" class="player-icon" alt="Volume">
+                            </button>
+                            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.05" value="1">
+                            <div class="time-display">
+                                <span id="currentTime">0:00</span> / <span id="durationTime">0:00</span>
+                            </div>
+                        </div>
+
+                        <div class="right-controls">
+                            <select id="speedSelect" class="player-select">
+                                <option value="0.5">0.5x</option>
+                                <option value="1" selected>1.0x</option>
+                                <option value="1.5">1.5x</option>
+                                <option value="2">2.0x</option>
+                            </select>
+
+                            <select id="qualitySelect" class="player-select">
+                                <option value="1080">1080p</option>
+                                <option value="720" selected>720p</option>
+                                <option value="480">480p</option>
+                            </select>
+
+                            <button id="fullscreenBtn" type="button">
+                                <img src="/static/images/buttons/allscreen.png" id="fullscreenImg" class="player-icon" alt="Fullscreen">
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                        <!-- Название видео -->
+            <h3 class="fw-bold text-dark mb-3">{{ video.title }}</h3>
+
+            <!-- БЛОК КАНАЛА, ПОДПИСОК И РЕАКЦИЙ (YouTube Style) -->
+            <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between bg-white p-3 rounded-4 shadow-sm border mb-4 gap-3">
+                <!-- Левая сторона: Инфо канала и кнопка Подписаться -->
+                <div class="d-flex align-items-center gap-3">
+                    <img src="{{ channel.avatar_path or '/static/images/default_channel_avatar.png' }}" alt="Channel Avatar" class="rounded-circle border" style="width: 52px; height: 52px; object-fit: cover;">
+                    <div>
+                        <a href="/channel/{{ channel.id }}" class="text-decoration-none text-dark">
+                            <h6 class="fw-bold mb-0 hover-luma_blue">{{ channel.channel_name }}</h6>
+                        </a>
+                        <span class="text-muted small" id="subs-count-text">👥 {{ subs_count }} подписчиков</span>
+                    </div>
+
+                    <div class="ms-sm-2">
+                        {% if current_user.is_authenticated and channel.luma_user_id == current_user.id %}
+                            <span class="badge bg-light text-secondary rounded-pill px-3 py-2 border">Ваш канал</span>
+                        {% elif current_user.is_authenticated %}
+                            <button id="btn-subscribe" data-channel-id="{{ channel.id }}" class="btn {% if is_subbed %}btn-secondary{% else %}btn-danger{% endif %} btn-sm rounded-pill px-3 fw-bold shadow-sm">
+                                {% if is_subbed %}Вы подписаны{% else %}Подписаться{% endif %}
+                            </button>
+                        {% else %}
+                            <a href="/login" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm">Подписаться</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Правая сторона: Лайки / Дизлайки -->
+                <div class="d-flex align-items-center gap-2">
+                    <div class="btn-group shadow-sm rounded-pill bg-light p-1">
+                        <button id="likeBtn" class="btn btn-sm {% if is_liked %}btn-primary text-white{% else %}btn-link text-dark text-decoration-none{% endif %} rounded-pill px-3 fw-bold">
+                            👍 <span id="ratingScore">{{ video.get_rating_score() }}</span>
+                        </button>
+                        <button id="dislikeBtn" class="btn btn-sm {% if is_disliked %}btn-danger text-white{% else %}btn-link text-dark text-decoration-none{% endif %} rounded-pill px-3">
+                            👎
+                        </button>
+                    </div>
+                    <!-- Кнопка Репоста Видео v0.98.4.2 (Очищена от вставок кода БД) -->
+                    <button class="btn btn-sm btn-light border rounded-pill px-3 fw-bold shadow-sm d-flex align-items-center gap-2" onclick="openRepostModal('video', '{{ video.id }}')">
+                        <img src="/static/images/buttons/repost.png" alt="Repost" style="width: 18px; height: 18px; pointer-events: none;">
+                        <span id="repost-count-video-{{ video.id }}">{{ total_video_reps }}</span>
+                    </button>
+
+
+                    <span class="text-muted small ms-2">👁️ {{ video.views }} просмотров</span>
+                </div>
+            </div>
+
+            <!-- Блок описания ролика -->
+            <div class="bg-white p-3 rounded-4 shadow-sm border mb-4">
+                <p class="text-secondary mb-0 style-desc" style="white-space: pre-line; font-size: 0.9rem;">{{ video.description or 'Описание отсутствует.' }}</p>
+            </div>
+
+            <!-- БЛОК КОММЕНТАРИЕВ (AJAX) -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h5 class="fw-bold text-dark mb-4">💬 Комментарии</h5>
+
+                {% if current_user.is_authenticated %}
+                    <form id="commentForm" class="mb-4">
+                        <div class="input-group">
+                            <textarea id="commentInput" class="form-control rounded-start-3" rows="1" placeholder="Оставьте свой комментарий..." required style="resize: none;"></textarea>
+                            <button type="submit" class="btn btn-luma text-white fw-bold px-4 rounded-end-3">Отправить</button>
+                        </div>
+                    </form>
+                {% else %}
+                    <div class="alert alert-light border text-center rounded-3 small py-2 mb-4">
+                        <a href="/login" class="text-luma_blue fw-bold text-decoration-none">Войдите в аккаунт</a>, чтобы оставлять комментарии.
+                    </div>
+                {% endif %}
+
+                <!-- Список комментариев -->
+                <div id="commentsList" class="d-flex flex-column gap-3">
+                    {% if not video.comments %}
+                        <p class="text-muted small py-3 mb-0 text-center" id="noCommentsText">Станьте первым, кто оставит комментарий!</p>
+                    {% else %}
+                        {% for comment in video.comments | sort(attribute='created_date', reverse=true) %}
+                            <div class="border-bottom pb-3 small">
+                                <strong class="text-luma_blue">@{{ comment.user.nickname }}</strong>
+                                <span class="text-muted ms-2" style="font-size: 0.75rem;">{{ comment.created_date.strftime('%d.%m.%Y %H:%M') }}</span>
+                                <p class="mb-0 text-dark mt-1" style="white-space: pre-line;">{{ comment.text }}</p>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Правая колонка: Блок боковых рекомендаций -->
+        <div class="col-12 col-lg-4">
+            <h5 class="fw-bold text-dark mb-3">Рекомендуем посмотреть</h5>
+            <div class="d-flex flex-column gap-3">
+                {% if not recommended %}
+                    <p class="text-muted small">Другие видео пока отсутствуют.</p>
+                {% else %}
+                    {% for rec in recommended %}
+                        <a href="/videos/{{ rec.id }}" class="text-decoration-none card border-0 shadow-sm rounded-3 overflow-hidden bg-white">
+                            <div class="row g-0 align-items-center">
+                                <div class="col-4">
+                                    <img src="{{ rec.thumbnail_path }}" class="img-fluid w-100 object-fit-cover" style="height: 75px;" alt="{{ rec.title }}">
+                                </div>
+                                <div class="col-8 p-2">
+                                    <h6 class="fw-bold text-dark text-truncate mb-1 small" style="max-width: 180px;">{{ rec.title }}</h6>
+                                    <span class="text-muted" style="font-size: 0.75rem;">👁️ {{ rec.views }}</span>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Управляющая JavaScript-логика платформы Luma v0.98.3.7 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- ИНИЦИАЛИЗАЦИЯ ПЛЕЕРА LUMA PLAYER ---
+    const playerContainer = document.getElementById('lumaPlayer');
+    const video = document.getElementById('mainVideo');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const timelineContainer = document.getElementById('timelineContainer');
+    const timelineProgress = document.getElementById('timelineProgress');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationTimeEl = document.getElementById('durationTime');
+    const speedSelect = document.getElementById('speedSelect');
+    const qualitySelect = document.getElementById('qualitySelect');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+    // Форматирование времени (0:00)
+    function formatTime(time) {
+        if (isNaN(time)) return "0:00";
+        const mins = Math.floor(time / 60);
+        const secs = Math.floor(time % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // Воспроизведение / Пауза с подменой иконок из папки /buttons/
+    playPauseBtn.addEventListener('click', () => {
+        const playPauseImg = document.getElementById('playPauseImg');
+        if (video.paused) {
+            video.play();
+            playPauseImg.src = '/static/images/buttons/pause.png';
+        } else {
+            video.pause();
+            playPauseImg.src = '/static/images/buttons/play.png';
+        }
+    });
+
+    // Клик по самому экрану видео дублирует нажатие кнопки воспроизведения
+    video.addEventListener('click', () => { playPauseBtn.click(); });
+
+    // Обновление таймлайна прогресса
+    video.addEventListener('timeupdate', () => {
+        if (video.duration) {
+            const percentage = (video.currentTime / video.duration) * 100;
+            timelineProgress.style.width = `${percentage}%`;
+        }
+        currentTimeEl.innerText = formatTime(video.currentTime);
+    });
+
+    // Первоначальный подсчет длины видеопотока при загрузке метаданных чанка
+    video.addEventListener('loadedmetadata', () => {
+        durationTimeEl.innerText = formatTime(video.duration);
+    });
+
+    // Перемотка видео при клике по таймлайн-бару
+    timelineContainer.addEventListener('click', (e) => {
+        const rect = timelineContainer.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        video.currentTime = (clickX / rect.width) * video.duration;
+    });
+
+    // Умная функция подмены иконок громкости в зависимости от процента звука
+    function updateVolumeIcon(volume, isMuted) {
+        const volumeImg = document.getElementById('volumeImg');
+        if (isMuted || volume === 0) {
+            volumeImg.src = '/static/images/buttons/novolume.png';
+        } else if (volume > 0 && volume <= 0.5) {
+            volumeImg.src = '/static/images/buttons/volume1.png';
+        } else if (volume > 0.5 && volume <= 0.95) {
+            volumeImg.src = '/static/images/buttons/volume2.png';
+        } else {
+            volumeImg.src = '/static/images/buttons/volume3.png';
+        }
+    }
+
+    // Регулировка уровня звука ползунком
+    volumeSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        video.volume = val;
+        video.muted = (val === 0);
+        updateVolumeIcon(val, video.muted);
+    });
+
+    // Быстрый клик по иконке звука (Mute / Unmute)
+    muteBtn.addEventListener('click', () => {
+        video.muted = !video.muted;
+        if (video.muted) {
+            volumeSlider.value = 0;
+            updateVolumeIcon(0, true);
+        } else {
+            if (video.volume === 0) video.volume = 0.7; // Возврат на средний уровень
+            volumeSlider.value = video.volume;
+            updateVolumeIcon(video.volume, false);
+        }
+    });
+
+    // Изменение скорости воспроизведения видеопотока
+    speedSelect.addEventListener('change', (e) => {
+        video.playbackRate = parseFloat(e.target.value);
+    });
+
+    // Выбор качества видео (Пересчет позиции буфера стриминга HTTP 206)
+    qualitySelect.addEventListener('change', () => {
+        const currentPos = video.currentTime;
+        const isPlaying = !video.paused;
+        video.src = `/videos/stream/{{ video.id }}?quality=${qualitySelect.value}`;
+        video.load();
+        video.currentTime = currentPos;
+        video.addEventListener('loadedmetadata', function onMetadata() {
+            if (isPlaying) video.play();
+            video.removeEventListener('loadedmetadata', onMetadata);
+        });
+    });
+
+    // Управление полноэкранным режимом плеера
+    fullscreenBtn.addEventListener('click', () => {
+        const fullscreenImg = document.getElementById('fullscreenImg');
+        if (!document.fullscreenElement) {
+            playerContainer.requestFullscreen()
+                .then(() => { fullscreenImg.src = '/static/images/buttons/miniscreen.png'; })
+                .catch(err => console.error(err));
+        } else {
+            document.exitFullscreen();
+            fullscreenImg.src = '/static/images/buttons/allscreen.png';
+        }
+    });
+
+    // Корректный сброс иконки full-screen при нажатии пользователем аппаратной кнопки ESC
+    document.addEventListener('fullscreenchange', () => {
+        const fullscreenImg = document.getElementById('fullscreenImg');
+        if (!document.fullscreenElement) {
+            fullscreenImg.src = '/static/images/buttons/allscreen.png';
+        }
+    });
+        // --- ИНТЕРАКТИВНАЯ ЛОГИКА ОВЕРЛЕЯ ЗА ТЕМНЕНИЯ v0.98.3.7 ---
+    const overlay = document.getElementById('playerOverlay');
+    const overlayCenterBtn = document.getElementById('overlayCenterBtn');
+    const overlayCenterImg = document.getElementById('overlayCenterImg');
+    let isVideoEnded = false;
+
+    // Событие Паузы: включаем затемнение и выводим иконку паузы
+    video.addEventListener('pause', () => {
+        if (!isVideoEnded) {
+            overlayCenterImg.src = '/static/images/buttons/pause.png';
+            overlay.classList.add('active');
+        }
+    });
+
+    // Событие Запуска / Возобновления: убираем затемнение экрана
+    video.addEventListener('play', () => {
+        isVideoEnded = false;
+        overlay.classList.remove('active');
+        document.getElementById('playPauseImg').src = '/static/images/buttons/pause.png';
+    });
+
+    // Событие Конца видеоролика: включаем полное затемнение и выводим repeat
+    video.addEventListener('ended', () => {
+        isVideoEnded = true;
+        overlayCenterImg.src = '/static/images/buttons/repeat.png';
+        document.getElementById('playPauseImg').src = '/static/images/buttons/play.png';
+        overlay.classList.add('active');
+    });
+
+    // Клик по центральной кнопке оверлея снимает с паузы или перезапускает поток заново
+    overlayCenterBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Исключаем зацикливание кликов по экрану
+        if (isVideoEnded) {
+            video.currentTime = 0;
+            video.play();
+        } else {
+            video.play();
+        }
+    });
+
+
+    // --- СУБСКРИБШЕНЫ (ПОДПИСКИ НА КАНАЛЫ) ---
+    const mainSubBtn = document.getElementById('btn-subscribe');
+    const overlaySubBtn = document.getElementById('overlay-subscribe-btn');
+
+    function handleSubscribeClick() {
+        const channelId = mainSubBtn.getAttribute('data-channel-id');
+        fetch(`/api/channel/${channelId}/subscribe`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) { alert(data.error); return; }
+
+            // Синхронно обновляем внешний вид обеих кнопок (под видео и внутри оверлея)
+            const buttons = [mainSubBtn, overlaySubBtn].filter(Boolean);
+            buttons.forEach(btn => {
+                if (data.subscribed) {
+                    btn.className = 'btn btn-secondary btn-sm rounded-pill px-3 fw-bold';
+                    btn.innerText = 'Вы подписаны';
+                } else {
+                    btn.className = 'btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm';
+                    btn.innerText = 'Подписаться';
+                }
+            });
+            document.getElementById('subs-count-text').innerHTML = `👥 ${data.subs_count} подписчиков`;
+        });
+    }
+
+    if (mainSubBtn) mainSubBtn.addEventListener('click', handleSubscribeClick);
+    if (overlaySubBtn) overlaySubBtn.addEventListener('click', handleSubscribeClick);
+
+
+    // --- ЛАЙКИ / ДИЗЛАЙКИ (РЕАКЦИИ) ---
+    const likeBtn = document.getElementById('likeBtn');
+    const dislikeBtn = document.getElementById('dislikeBtn');
+    const ratingScore = document.getElementById('ratingScore');
+
+    if (likeBtn && dislikeBtn) {
+        likeBtn.addEventListener('click', function() {
+            fetch('/api/videos/{{ video.id }}/like', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) return;
+                    ratingScore.innerText = data.score;
+                    likeBtn.className = data.liked ? 'btn btn-sm btn-primary text-white rounded-pill px-3 fw-bold' : 'btn btn-sm btn-link text-dark text-decoration-none rounded-pill px-3 fw-bold';
+                    dislikeBtn.className = 'btn btn-sm btn-link text-dark text-decoration-none rounded-pill px-3';
+                });
+        });
+
+        dislikeBtn.addEventListener('click', function() {
+            fetch('/api/videos/{{ video.id }}/dislike', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) return;
+                    ratingScore.innerText = data.score;
+                    dislikeBtn.className = data.disliked ? 'btn btn-sm btn-danger text-white rounded-pill px-3' : 'btn btn-sm btn-link text-dark text-decoration-none rounded-pill px-3';
+                    likeBtn.className = 'btn btn-sm btn-link text-dark text-decoration-none rounded-pill px-3 fw-bold';
+                });
+        });
+    }
+
+
+    // --- КОММЕНТАРИИ (AJAX) ---
+    const commentForm = document.getElementById('commentForm');
+    const commentInput = document.getElementById('commentInput');
+    const commentsList = document.getElementById('commentsList');
+    const noCommentsText = document.getElementById('noCommentsText');
+
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const text = commentInput.value.trim();
+            if (!text) return;
+
+            fetch('/api/videos/{{ video.id }}/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    commentInput.value = '';
+                    if (noCommentsText) noCommentsText.remove();
+                    const newCommentHtml = `
+                        <div class="border-bottom pb-3 small">
+                            <strong class="text-luma_blue">@${data.comment.nickname}</strong>
+                            <span class="text-muted ms-2" style="font-size: 0.75rem;">${data.comment.date}</span>
+                            <p class="mb-0 text-dark mt-1" style="white-space: pre-line;">${data.comment.text}</p>
+                        </div>
+                    `;
+                    commentsList.insertAdjacentHTML('afterbegin', newCommentHtml);
+                }
+            })
+            .catch(err => console.error('Ошибка отправки комментария:', err));
+        });
+    }
+});
+// Асинхронное обновление счетчика репостов видео
+document.addEventListener('lumaContentReposted', function(e) {
+    if (e.detail.type === 'video') {
+        const countEl = document.getElementById(`repost-count-video-${e.detail.id}`);
+        if (countEl) countEl.innerText = e.detail.count;
+    }
+});
+
+</script>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8 bg-white text-dark p-4 rounded shadow-sm border">
+            
+            <!-- ВСПЛЫВАЮЩИЕ СИСТЕМНЫЕ УВЕДОМЛЕНИЯ -->
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for msg in messages %}
+                        <div class="alert alert-info py-2 small border-0 mb-3" style="background-color: rgba(80, 13, 233, 0.08); color: #500DE9;">
+                            ℹ️ {{ msg }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+                <div>
+                    <h2 class="h4 m-0 fw-bold" style="color: #6f2da8;">🎒 Мой инвентарь кастомизации</h2>
+                    <p class="small text-muted m-0">Управление значками, перекрасами никнейма и оформлением профиля</p>
+                </div>
+                <a href="/profile/{{ current_user.nickname }}" class="btn btn-outline-secondary btn-sm fw-bold">В профиль</a>
+            </div>
+
+            {% if not user_items %}
+                <div class="text-center py-5 bg-light rounded border border-dashed">
+                    <span class="fs-1 d-block mb-2">📦</span>
+                    <p class="text-muted m-0 fw-semibold">Твой инвентарь пока пуст.</p>
+                    <p class="small text-muted">Администрация может выдать тебе баджи или кастомные цвета через терминал сервера.</p>
+                </div>
+            {% else %}
+                <div class="row row-cols-1 row-cols-md-2 g-3">
+                    {% for entry in user_items %}
+                        <div class="col">
+                            <div class="card h-100 border {% if entry.is_equipped %}border-primary bg-light bg-opacity-25 shadow-sm{% endif %} transition-all">
+                                <div class="card-body d-flex flex-column justify-content-between p-3">
+                                    <div>
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <h6 class="card-title fw-bold m-0 text-truncate">{{ entry.item.title }}</h6>
+                                            
+                                            <!-- Тип вещи в инвентаре -->
+                                            {% if entry.item.item_type == 'badge' %}
+                                                <span class="badge bg-success bg-opacity-10 text-success small fw-normal py-1 px-2">Значок (Бадж)</span>
+                                            {% elif entry.item.item_type == 'name_color' %}
+                                                <span class="badge bg-primary bg-opacity-10 text-primary small fw-normal py-1 px-2">Цвет никнейма</span>
+                                            {% elif entry.item.item_type == 'profile_theme' %}
+                                                <span class="badge bg-info bg-opacity-10 text-info small fw-normal py-1 px-2">Тема профиля</span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Визуальный предпросмотр предмета под твой личный никнейм v0.99.2.4fix1 -->
+                                        <div class="p-3 bg-light rounded text-center mb-3 border border-light d-flex align-items-center justify-content-center" style="min-height: 60px;">
+                                            {% if entry.item.item_type == 'badge' %}
+                                                <span class="small text-muted me-2">Как выглядит значок:</span>
+                                                <span class="fs-4">{{ entry.item.value }}</span>
+                                            {% elif entry.item.item_type == 'name_color' %}
+                                                <!-- Показываем градиент непосредственно на реальном имени юзера -->
+                                                <span class="fw-bold fs-5" style="{{ entry.item.value }}">
+                                                    @{{ current_user.nickname }}
+                                                </span>
+                                            {% elif entry.item.item_type == 'profile_theme' %}
+                                                <span class="small text-muted fw-bold">Активирует стиль: "{{ entry.item.value }}"</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <form action="{{ url_for('inventory.equip_item', user_item_id=entry.id) }}" method="post" class="m-0">
+                                        {% if entry.is_equipped %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger w-100 fw-bold py-2">Снять предмет</button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-sm btn-luma_blue text-white w-100 fw-bold py-2" style="background-color: #500DE9;">Активировать</button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-luma_blue:hover { background-color: #3b00be !important; }
+    .transition-all { transition: all 0.2s ease-in-out; }
+    .border-dashed { border-style: dashed !important; }
+</style>
+{% endblock %}

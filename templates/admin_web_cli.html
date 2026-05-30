@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10">
+            <div class="card bg-dark text-light border-0 shadow-lg rounded-3 overflow-hidden">
+                
+                <!-- Шапка консоли -->
+                <div class="card-header bg-luma_blue text-white py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">⚙️ Luma Web Management CLI v0.99.2.5 (Render Engine)</h5>
+                    <span class="badge bg-danger rounded-pill px-3">Оператор: @{{ current_user.nickname }}</span>
+                </div>
+
+                <!-- Экран терминала -->
+                <div class="card-body p-0">
+                    <div id="terminal-screen" class="p-3" style="height: 450px; background-color: #050505; color: #39ff14; font-family: 'Courier New', Courier, monospace; overflow-y: auto; white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4;">[SYSTEM] Интерактивный командный интерпретатор Luma запущен.
+[SYSTEM] Логика синхронизирована с модулем ядра admin_cli.py.
+Введите 'help' для просмотра доступных директивной модерации.
+--------------------------------------------------------------------------------------</div>
+                </div>
+
+                <!-- Зона ввода текстовой команды -->
+                <div class="card-footer bg-dark border-0 p-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-black border-secondary text-success fw-bold font-monospace">luma-admin&gt;</span>
+                        <input type="text" id="cli-input" class="form-control bg-black border-secondary text-light font-monospace" placeholder="Например: ban bad_user 60 или users_online" autofocus autocomplete="off">
+                        <button class="btn btn-success font-monospace fw-bold px-4" type="button" id="btn-send">EXECUTE</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const terminal = document.getElementById("terminal-screen");
+        const input = document.getElementById("cli-input");
+        const btnSend = document.getElementById("btn-send");
+
+        function sendTextCommand() {
+            const commandText = input.value.trim();
+            if (!commandText) return;
+
+            // Выводим локальное эхо введенной строки
+            terminal.innerText += "\n\nluma-admin> " + commandText;
+            terminal.scrollTop = terminal.scrollHeight;
+
+            // Отправляем обычный POST-запрос (не ломая сокеты и общие файлы)
+            fetch('/luma-web-cli-backend', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({ 'command': commandText })
+            })
+            .then(response => {
+                if (response.status === 403) {
+                    return { output: "Ошибка безопасности: Отказано в доступе." };
+                }
+                return response.json();
+            })
+            .then(data => {
+                terminal.innerText += "\n" + data.output;
+                terminal.scrollTop = terminal.scrollHeight;
+            })
+            .catch(err => {
+                terminal.innerText += "\n[CRITICAL]: Потеряно соединение с сервером Render.";
+            });
+
+            input.value = "";
+        }
+
+        btnSend.addEventListener("click", sendTextCommand);
+        input.addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                sendTextCommand();
+            }
+        });
+    });
+</script>
+{% endblock %}

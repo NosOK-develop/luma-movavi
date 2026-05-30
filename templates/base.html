@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luma | {{ title }}</title>
+    <!-- Сохранена оригинальная иконка вкладки -->
+    <link rel="icon" href="/static/images/Luma.ico">
+    {% assets "scss_all" %}
+        <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {% endassets %}
+    {{ pagedown.include_pagedown() }}
+</head>
+<body class="bg-light text-dark pb-5 pb-md-0">
+
+    <!-- 1. ВЕРХНИЙ НАВБАР ДЛЯ ПК (Десктопная версия) -->
+    <nav class="navbar navbar-expand-md navbar-dark bg-luma_blue shadow-sm sticky-top d-none d-md-flex">
+        <div class="container">
+            <!-- Сохранена ваша ссылка с графическим логотипом -->
+            <a class="navbar-brand fw-bold" href="/"><img src="/static/images/Luma_nav.jpg" alt="Luma Logo" class="navbar-logo me-2"></a>
+
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link text-white-50" href="/">Главная</a></li>
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item"><a class="nav-link text-white-50" href="/messenger">Мессенджер</a></li>
+                        <li class="nav-item"><a class="nav-link text-white-50" href="/clips">Клипы</a></li>
+                        <li class="nav-item"><a class="nav-link text-white-50" href="/media">Видео</a></li>
+                    {% endif %}
+                </ul>
+
+                <div class="d-flex align-items-center">
+                    {% if current_user.is_authenticated %}
+                        <div class="dropdown">
+                            <!-- Кнопка вызова списка (Отображает Имя) -->
+                            <a class="btn btn-link text-white text-decoration-none dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {{ current_user.name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2">
+                                <!-- Никнейм -->
+                                <li>
+                                    <span class="dropdown-item-text text-muted small pb-2 border-bottom d-block">
+                                        @{{ current_user.nickname }}
+                                    </span>
+                                </li>
+                                <!-- Внутри списков dropdown-menu в файле base.html (для ПК и Мобильных): -->
+                                <li>
+                                    <a class="dropdown-item px-3 py-2 text-dark" href="/profile/{{ current_user.nickname }}">
+                                        Профиль
+                                    </a>
+                                </li>
+                                <!-- ВНЕДРЕНИЕ ССЫЛКИ LUMA STUDIO v0.98.3.4 -->
+                                <li>
+                                    <a class="dropdown-item px-3 py-2 text-dark fw-medium" href="/studio">
+                                        ⚙️ Творческая студия
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+
+                                <!-- Кнопка Выйти -->
+                                <li>
+                                    <a class="dropdown-item px-3 py-2 text-danger fw-semibold" href="/logout">
+                                        Выйти
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="/login" class="btn btn-link text-white text-decoration-none me-2 fw-semibold">Войти</a>
+                        <a href="/register" class="btn btn-light text-luma_blue fw-bold rounded-pill px-3 shadow-sm">Регистрация</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 2. МОБИЛЬНЫЙ ВЕРХНИЙ ТОП-БАР (Только смартфоны) -->
+    <div class="mobile-top-bar bg-luma_blue text-white shadow-sm sticky-top d-block d-md-none py-2 px-3">
+        <div class="d-flex justify-content-between align-items-center w-100">
+            <!-- Сохранена ваша ссылка с графическим логотипом -->
+            <a class="navbar-brand fw-bold mb-0" href="/"><img src="/static/images/Luma_nav.jpg" alt="Luma Logo" class="navbar-logo me-2"></a>
+
+            {% if current_user.is_authenticated %}
+                <div class="dropdown">
+                    <!-- Мобильная кнопка вызова списка (Отображает Имя) -->
+                    <a class="badge bg-white text-luma_blue rounded-pill px-3 py-2 text-decoration-none dropdown-toggle fw-bold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        {{ current_user.name }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2">
+                        <li>
+                            <span class="dropdown-item-text text-muted small pb-2 border-bottom d-block">
+                                @{{ current_user.nickname }}
+                            </span>
+                        </li>
+                        <li>
+                            <a class="dropdown-item px-3 py-2 text-dark" href="/profile/{{ current_user.nickname }}">
+                                Профиль
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <a class="dropdown-item px-3 py-2 text-danger fw-semibold" href="/logout">
+                                Выйти
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            {% else %}
+                <a href="/login" class="btn btn-sm btn-light text-luma_blue rounded-pill fw-bold px-3 shadow-sm">Войти</a>
+            {% endif %}
+        </div>
+
+        <!-- Контекстный мобильный поиск -->
+        {% if show_mobile_search %}
+        <div class="mt-2 pt-1">
+            <form action="{{ search_target_url or '#' }}" method="GET" class="w-100 position-relative">
+                <input type="text" name="search" value="{{ request.args.get('search', '') }}" class="form-control form-control-sm rounded-pill border-0 px-3 py-2 text-dark bg-white" placeholder="Найти...">
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='js/messenger.js') }}"></script>
+
+
+    <!-- ОСНОВНОЙ КОНТЕНТ СТРАНИЦЫ -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 3. МОБИЛЬНЫЙ НИЖНИЙ ТАБ-БАР -->
+    <nav class="navbar fixed-bottom navbar-light bg-white border-top shadow d-block d-md-none py-1">
+        <div class="container-fluid px-0">
+            <div class="row w-100 mx-0 text-center">
+                <div class="col px-0">
+                    <a href="/" class="nav-link py-1 {% if request.path == '/' or request.path == '/index' %}text-luma_blue fw-bold{% else %}text-muted{% endif %}">
+                        <div class="fs-5 mb-0">🏠</div>
+                        <span style="font-size: 0.75rem; display: block;">Главная</span>
+                    </a>
+                </div>
+                {% if current_user.is_authenticated %}
+                <div class="col px-0">
+                    <a href="/messenger" class="nav-link py-1 {% if '/messenger' in request.path %}text-luma_blue fw-bold{% else %}text-muted{% endif %}">
+                        <div class="fs-5 mb-0">💬</div>
+                        <span style="font-size: 0.75rem; display: block;">Чаты</span>
+                    </a>
+                </div>
+                <div class="col px-0">
+                    <a href="/clips" class="nav-link py-1 {% if '/clips' in request.path %}text-luma_blue fw-bold{% else %}text-muted{% endif %}">
+                        <div class="fs-5 mb-0">🎬</div>
+                        <span style="font-size: 0.75rem; display: block;">Клипы</span>
+                    </a>
+                </div>
+                <div class="col px-0">
+                    <a href="/media" class="nav-link py-1 {% if '/media' in request.path %}text-luma_blue fw-bold{% else %}text-muted{% endif %}">
+                        <div class="fs-5 mb-0">📺</div>
+                        <span style="font-size: 0.75rem; display: block;">Видео</span>
+                    </a>
+                </div>
+                <div class="col px-0">
+                    <a href="/profile/{{ current_user.nickname }}" class="nav-link py-1 {% if '/profile' in request.path %}text-luma_blue fw-bold{% else %}text-muted{% endif %}">
+                        <div class="fs-5 mb-0">👤</div>
+                        <span style="font-size: 0.75rem; display: block;">Профиль</span>
+                    </a>
+                </div>
+                {% else %}
+                <div class="col px-0">
+                    <a href="/register" class="nav-link py-1 {% if request.path == '/register' %}text-luma_blue fw-bold{% else %}text-muted{% endif %}">
+                        <div class="fs-5 mb-0">🔑</div>
+                        <span style="font-size: 0.75rem; display: block;">Регистрация</span>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+
+    <!-- ГЛОБАЛЬНОЕ МОДАЛЬНОЕ ОКНО РЕПОСТОВ v0.98.4.2 -->
+    <div class="modal fade" id="lumaRepostModal" Trinity-id="repostModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg rounded-4 bg-white">
+                <div class="modal-header border-0 pb-0">
+                    <h6 class="fw-bold text-dark mb-0">🔁 Поделиться на канал</h6>
+                    <button type="button" class="btn-close small" data-bs-submit="modal" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <p class="text-muted small mb-3">Выберите ваш канал Luma Media для публикации репоста:</p>
+                    <!-- Сюда JS вставит список радио-кнопок каналов -->
+                    <div id="repostChannelsContainer" class="d-flex flex-column gap-2 mb-3"></div>
+                    <div class="d-grid">
+                        <button type="button" id="submitRepostBtn" class="btn btn-sm btn-luma text-white fw-bold rounded-pill">Опубликовать репост</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Общий скрипт-передатчик для модалки репоста -->
+    <script>
+    let currentRepostData = { type: null, id: null };
+
+    function openRepostModal(contentType, contentId) {
+        currentRepostData.type = contentType;
+        currentRepostData.id = contentId;
+
+        const container = document.getElementById('repostChannelsContainer');
+        container.innerHTML = '<span class="text-muted small py-2 text-center">Загрузка каналов...</span>';
+
+        const modalElement = document.getElementById('lumaRepostModal');
+        const bsModal = new bootstrap.Modal(modalElement);
+        bsModal.show();
+
+        // Подгружаем каналы автора
+        fetch('/api/repost/my-channels')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.channels || data.channels.length === 0) {
+                    container.innerHTML = '<span class="text-danger small text-center">У вас нет созданных медиа-каналов!</span>';
+                    document.getElementById('submitRepostBtn').disabled = true;
+                    return;
+                }
+                document.getElementById('submitRepostBtn').disabled = false;
+                container.innerHTML = data.channels.map((c, idx) => `
+                    <div class="form-check p-2 border rounded-3 bg-light hover-bg">
+                        <input class="form-check-input ms-1" type="radio" name="repostChannelRadio" id="repChan_${c.id}" value="${c.id}" ${idx === 0 ? 'checked' : ''}>
+                        <label class="form-check-input-label small fw-bold text-dark ms-2" for="repChan_${c.id}">${c.name}</label>
+                    </div>
+                `).join('');
+            });
+    }
+
+    document.getElementById('submitRepostBtn').addEventListener('click', function() {
+        const selectedRadio = document.querySelector('input[name="repostChannelRadio"]:checked');
+        if (!selectedRadio) return;
+
+        fetch('/api/repost/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                channel_id: selectedRadio.value,
+                content_type: currentRepostData.type,
+                content_id: currentRepostData.id
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else if (data.success) {
+                // Оповещаем интерфейс (динамически обновим счетчики на страницах, если они есть)
+                const event = new CustomEvent('lumaContentReposted', { detail: { type: currentRepostData.type, id: currentRepostData.id, count: data.total_reposts } });
+                document.dispatchEvent(event);
+
+                bootstrap.Modal.getInstance(document.getElementById('lumaRepostModal')).hide();
+                alert('Репост успешно опубликован на ваш канал!');
+            }
+        });
+    });
+    </script>
+
+    <!-- Использование локального скомпилированного JS-пакета, соответствующего вашему SCSS -->
+    <script src="/static/scss/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

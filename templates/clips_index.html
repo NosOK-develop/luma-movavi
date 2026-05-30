@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="clips-wrapper-stream" id="clipsStream">
+    {% if not clips %}
+        <div class="container h-100 d-flex flex-column align-items-center justify-content-center text-center text-white py-5">
+            <span class="display-1">🎬</span>
+            <h3 class="fw-bold mt-4">Лента клипов пуста</h3>
+            <p class="text-white-50 small mb-4">Будьте первым, кто создаст канал Luma Media и опубликует вертикальное видео!</p>
+            <a href="/clips/upload" class="btn btn-light text-dark fw-bold rounded-pill px-4 shadow">Загрузить клип</a>
+        </div>
+    {% else %}
+        {% for clip in clips %}
+            <!-- Отдельный Shorts-контейнер с фиксацией скролла -->
+            <div class="clip-shorts-container" data-clip-id="{{ clip.id }}">
+                <div class="clip-video-frame-9-16">
+
+                    <!-- КНОПКА НАЗАД: Теперь привязана строго к рамке видео v0.98.4.5fix2 -->
+                    <button type="button" onclick="window.history.back();" class="btn-clip-back-floating shadow-sm" aria-label="Назад">
+                        <img src="/static/images/buttons/previous.png" alt="Back" style="width: 18px; height: 18px; transform: scaleX(1); pointer-events: none; filter: invert(1);">
+                    </button>
+
+                    <!-- Видео-поток со стримингом HTTP 206 -->
+                    <video class="luma-shorts-video" src="/clips/stream/{{ clip.id }}" loop preload="metadata" playsinline></video>
+
+
+                    <!-- Нижняя плашка: Автор, Описание -->
+                    <div class="clip-bottom-info-overlay">
+                        <div class="channel-meta-row">
+                            <img src="{{ clip.media_account.avatar_path or '/static/images/default_channel_avatar.png' }}" class="channel-avatar-mini" alt="Avatar">
+                            <a href="/channel/{{ clip.media_account.id }}" class="text-white fw-bold text-decoration-none small">
+                                {{ clip.media_account.channel_name }}
+                            </a>
+                        </div>
+                        <p class="small text-white mb-0 text-truncate-2">{{ clip.title }}</p>
+                    </div>
+
+                    <!-- Боковая панель действий -->
+                    <div class="clip-side-actions">
+                        <!-- Кнопка Лайка -->
+                        {% set session_key = 'clip_liked_' ~ clip.id %}
+                        <button class="action-btn-circle clip-like-trigger {% if session.get(session_key) %}active-like{% endif %}" data-clip-id="{{ clip.id }}">
+                            ❤️
+                        </button>
+                        <span class="like-count-el">{{ clip.likes_count }}</span>
+
+                        <!-- ИСПРАВЛЕННАЯ КНОПКА РЕПОСТА: Чистый вызов переданной переменной clip.total_reposts -->
+                        <button class="action-btn-circle clip-share-trigger" onclick="openRepostModal('clip', '{{ clip.id }}')">
+                            <img src="/static/images/buttons/repost.png" class="clip-btn-icon" alt="Repost" style="pointer-events: none; width: 22px; height: 22px;">
+                        </button>
+                        <span id="repost-count-clip-{{ clip.id }}">{{ clip.total_reposts }}</span>
+
+                        <!-- Мут/Звук для всей ленты -->
+                        <button class="action-btn-circle clip-volume-toggle">
+                            🔊
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<!-- JavaScript-контроллер ленты клипов Luma v0.98.4.2 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const videos = document.querySelectorAll('.luma-shorts-video');
+    let isGlobalMuted = false; // Глобальное состояние звука для всей ленты
+
+    // --- 1. УМНЫЙ ИНТЕРФЕЙСНЫЙ СКРОЛЛ (Intersection Observer) ---
+    const observerOptions = {
+        root: document.getElementById('clipsStream'),
+        rootMargin: '0px',
+        threshold: 0.6 // Видео запускается, когда видно более чем на 60%
+    };
+
+    const clipObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const video = entry.target;
+            if (entry.isIntersecting) {
+                // Воспроизводим текущий клип, попавший на экран
+                video.muted = isGlobalMuted;
+                video.play().catch(err => {
+                    console.log("[SYSTEM] Автоплей заблокирован политикой браузера, ждем клика.");
+                });
+            } else {
+                // Полностью останавливаем и сбрасываем видео, ушедшее из кадра
+                video.pause();
+                video.currentTime = 0;
+            }
+        });
+    }, observerOptions);
+
+    videos.forEach(video => {
+        clipObserver.observe(video);
+
+        // Клик по самому экрану видео работает как воспроизведение/пауза
+        video.addEventListener('click', function() {
+            if (this.paused) {
+                this.play();
+            } else {
+                this.pause();
+            }
+        });
+    });
+
+    // --- 2. ГЛОБАЛЬНЫЙ КОНТРОЛЬ ЗВУКА ЛЕНТЫ ---
+    const volumeButtons = document.querySelectorAll('.clip-volume-toggle');
+    volumeButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            isGlobalMuted = !isGlobalMuted;
+
+            // На лету меняем иконку и мутим абсолютно все видео в ленте
+            videos.forEach(v => { v.muted = isGlobalMuted; });
+            volumeButtons.forEach(b => {
+                b.innerText = isGlobalMuted ? '🔇' : '🔊';
+                b.classList.toggle('active', isGlobalMuted);
+            });
+        });
+    });
+
+    // --- 3. АСИНХРОННЫЕ ЛАЙКИ БЕЗ REDIS (flask.session) ---
+    const likeButtons = document.querySelectorAll('.clip-like-trigger');
+    likeButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const clipId = this.getAttribute('data-clip-id');
+            const countEl = this.nextElementSibling;
+
+            fetch(`/api/clips/${clipId}/like`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) return;
+
+                    // Обновляем счетчик и меняем цвет кнопки (luma_pink)
+                    countEl.innerText = data.likes;
+                    if (data.liked) {
+                        this.classList.add('active-like');
+                    } else {
+                        this.classList.remove('active-like');
+                    }
+                })
+                .catch(err => console.error('[ERROR] Ошибка отправки лайка:', err));
+        });
+    });
+
+    // --- 4. ДИНАМИЧЕСКОЕ ОБНОВЛЕНИЕ СЧЕТЧИКА РЕПОСТОВ КЛИПА ---
+    document.addEventListener('lumaContentReposted', function(e) {
+        if (e.detail.type === 'clip') {
+            const countEl = document.getElementById(`repost-count-clip-${e.detail.id}`);
+            if (countEl) countEl.innerText = e.detail.count;
+        }
+    });
+});
+</script>
+{% endblock %}
