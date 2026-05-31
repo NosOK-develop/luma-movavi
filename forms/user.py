@@ -19,6 +19,11 @@ class EditProfileForm(FlaskForm):
         validators=[DataRequired(), Email()],
         render_kw={"class": "form-control bg-secondary text-white border-0", "placeholder": "name@example.com"}
     )
+    password = StringField(
+        'Пароль',
+        validators=[DataRequired("Введите новый или старый пароль, это обязательно"), Length(min=6, max=20)],
+        render_kw={"class": "form-control bg-secondary text-white border-0"}
+    )
     about = TextAreaField(
         'О себе',
         validators=[Optional(), Length(max=500)],
@@ -80,8 +85,8 @@ class RegisterForm(FlaskForm):
                        render_kw={"class": "form-control bg-secondary text-white border-0", "placeholder": "Как вас зовут?"})
     email = StringField('Электронная почта', validators=[DataRequired(), Email()],
                         render_kw={"class": "form-control bg-secondary text-white border-0", "placeholder": "name@example.com"})
-    password = PasswordField('Пароль', validators=[DataRequired(), Length(min=4)],
-                             render_kw={"class": "form-control bg-secondary text-white border-0", "placeholder": "Минимум 4 символа"})
+    password = PasswordField('Пароль', validators=[DataRequired(), Length(min=6)],
+                             render_kw={"class": "form-control bg-secondary text-white border-0", "placeholder": "Минимум 6 символов"})
     password_again = PasswordField('Повторите пароль', validators=[DataRequired(), EqualTo('password', message='Пароли должны совпадать')],
                                    render_kw={"class": "form-control bg-secondary text-white border-0", "placeholder": "Повторите пароль"})
     about = TextAreaField('О себе', render_kw={"class": "form-control bg-secondary text-white border-0", "rows": 3, "placeholder": "Расскажите немного о себе..."})

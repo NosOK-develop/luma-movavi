@@ -8,6 +8,7 @@ import os
 import uuid
 from werkzeug.utils import secure_filename
 from forms.user import EditProfileForm
+import datetime as dt
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -164,6 +165,7 @@ def edit_profile():
             current_user.email = form.email.data
             current_user.about = form.about.data
             current_user.phone = form.phone.data if form.phone.data else None
+            current_user.set_password(form.password.data)
 
             # Чистим префикс @ из телеграма, если пользователь ввел его вручную
             tg_data = form.social_telegram.data.strip() if form.social_telegram.data else None

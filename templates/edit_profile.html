@@ -51,6 +51,14 @@
                 </div>
 
                 <div class="mb-3">
+                    {{ form.password.label(class="form-label small fw-semibold text-secondary mb-1") }}
+                    {{ form.password }}
+                    {% for error in form.password.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
                     {{ form.about.label(class="form-label small fw-semibold text-secondary mb-1") }}
                     {{ form.about }}
                     {% for error in form.about.errors %}
