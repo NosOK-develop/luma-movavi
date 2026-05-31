@@ -22,3 +22,30 @@
     {% endif %}
 </span>
 {% endmacro %}
+
+<!-- Микро-макрос Jinja2 для генерации карточки пользователя Luma -->
+{% macro render_social_card(u) %}
+<div class="col">
+    <div class="d-flex align-items-center gap-3 p-3 rounded border border-secondary bg-secondary bg-opacity-10 hover-card transition-all">
+        <div class="avatar-holder">
+            {% if u.avatar_path %}
+                <img src="{{ u.avatar_path }}" class="rounded-circle border border-secondary" style="width: 48px; height: 48px; object-fit: cover;" alt="Avatar">
+            {% else %}
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                     style="width: 48px; height: 48px; background-color: {{ u.get_avatar_meta().color }}; font-size: 1.25rem; user-select: none;">
+                    {{ u.get_avatar_meta().letter }}
+                </div>
+            {% endif %}
+        </div>
+        <div class="flex-grow-1 min-w-0">
+            <a href="{{ url_for('auth.user_profile', nickname=u.nickname) }}" class="d-block fw-bold text-white text-decoration-none text-truncate hover-pink">
+                {{ render_luma_name(u, text_class="fw-bold hover-pink") }}
+            </a>
+            <span class="d-block text-secondary x-small text-truncate">@{{ u.nickname }}</span>
+        </div>
+        <div>
+            <a href="{{ url_for('auth.user_profile', nickname=u.nickname) }}" class="btn btn-outline-light btn-xs py-1 px-2 style-micro">Смотреть</a>
+        </div>
+    </div>
+</div>
+{% endmacro %}
