@@ -5,7 +5,7 @@
 
     <!-- Блок переключения лент под новый URL v0.98.4.6 -->
     {% if current_user.is_authenticated %}
-    <div class="d-flex gap-2 mb-4 border-bottom pb-2">
+    <div class="position-relative d-flex gap-2 mb-4 border-bottom pb-2">
         <a href="/media?feed=all" class="btn btn-sm {% if feed_type == 'all' %}btn-luma text-white{% else %}btn-outline-secondary{% endif %} rounded-pill px-3">🔥 Лента Media</a>
         <a href="/media?feed=subs" class="btn btn-sm {% if feed_type == 'subs' %}btn-luma text-white{% else %}btn-outline-secondary{% endif %} rounded-pill px-3">📣 Подписки</a>
     </div>
@@ -15,6 +15,7 @@
     {% if not videos and not clips %}
         <div class="text-center py-5">
             <p class="text-muted">Контент еще не опубликован.</p>
+            <a class="btn-luma btn" href="/videos/upload">Станьте первым!</a>
         </div>
     {% else %}
         <div class="row g-4">

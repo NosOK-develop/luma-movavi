@@ -16,6 +16,7 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/')
 @auth_bp.route('/index')
 @auth_bp.route('/main')
+@auth_bp.route('/home')
 def hello_world():
     db_sess = db_session.create_session()
     posts = db_sess.query(Post).all()

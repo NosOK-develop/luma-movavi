@@ -7,6 +7,9 @@
             <div>
                 {{ post.text | safe }}
             </div>
+            {% if current_user.id == post.author_id or current_user.role_level >= 3 %}
+                <a class="btn btn-danger" href="/api/post/delete/{{ post.id }}">Удалить пост</a>
+            {% endif %}
         </div>
     </div>
 </div>

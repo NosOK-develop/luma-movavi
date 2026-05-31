@@ -134,17 +134,19 @@
                         <div class="row row-cols-1 row-cols-sm-2 g-3">
                             {% if posts != [] and posts %}
                                 {% for post in posts %}
-                                    <div class="col">
-                                        <div class="d-flex align-items-center gap-3 p-3 rounded border bg-light">
-                                            <div class="flex-grow-1 min-w-0">
-                                                <h6 class="fw-bold m-0 text-truncate text-dark">{{ post.title }}</h6>
-                                                <span class="x-small text-muted">{{ post.created_at }}</span>
-                                            </div>
-                                            <div>
-                                                <span class="badge bg-success bg-opacity-10 text-success py-1 px-2 style-micro fw-normal">{{ current_user.nickname }}</span>
+                                    <a href="/post/{{ post.id }}">
+                                        <div class="col">
+                                            <div class="d-flex align-items-center gap-3 p-3 rounded border bg-light">
+                                                <div class="flex-grow-1 min-w-0">
+                                                    <h6 class="fw-bold m-0 text-truncate text-dark">{{ post.title }}</h6>
+                                                    <span class="x-small text-muted">{{ post.created_at }}</span>
+                                                </div>
+                                                <div>
+                                                    <span class="badge bg-success bg-opacity-10 text-success py-1 px-2 style-micro fw-normal">{{ current_user.nickname }}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </a>
                                 {% endfor %}
                             {% else %}
                                 <div class="text-center py-4 bg-light rounded border border-dashed">

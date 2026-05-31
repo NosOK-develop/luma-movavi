@@ -29,3 +29,11 @@ def post(id):
     post = db_sess.query(Post).get(id)
     return render_template('post.html', post=post)
 
+@post_bp.route('/api/post/delete/<id>')
+@login_required
+def delete_post(id):
+    db_sess = db_session.create_session()
+    post = db_sess.query(Post).get(id)
+    db_sess.delete(post)
+    db_sess.commit()
+    return redirect('/home')
